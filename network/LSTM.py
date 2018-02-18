@@ -5,7 +5,13 @@ import torch
 
 class LSTM(nn.Module):
 
-    def __init__(self, batch_size, hidden_units, num_layers=1, num_outputs=26):
+    def __init__(self, batch_size, hidden_units=100, num_layers=1, num_outputs=26):
+        '''
+        :param batch_size: size of input expecting
+        :param hidden_units: number of hidden units to use, default 100
+        :param num_layers: number of layers, default 1
+        :param num_outputs: output to make to (26 for ABC)
+        '''
         super(LSTM, self).__init__()
         self.hidden_units = hidden_units
         self.num_layers = num_layers
