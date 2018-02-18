@@ -1,0 +1,45 @@
+import torch.nn as nn
+from torch.autograd import Variable
+import torch
+
+
+class LSTM(nn.Module):
+
+    def __init__(self, batch_size, hidden_units, num_layers=1, num_outputs=26):
+        super(LSTM, self).__init__()
+        self.hidden_units = hidden_units
+        self.num_layers = num_layers
+        self.batch_size = batch_size
+
+        # Create LSTM network
+        self.lstm = nn.LSTM(input_size=batch_size,
+                            hidden_size=hidden_units,
+                            num_layers=num_layers)
+
+        self.dense = nn.Linear(hidden_units, num_outputs)
+
+        self.hidden = self.init_hidden()
+
+    def init_hidden(self):
+        return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))),
+                nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))))
+
+    def forward(self, x, h, c):
+        '''
+        :param x: input of size (seq_len, batch, input_size)
+        :param h: hidden state of previous cell or initial cell
+        :param c: initial cell state for each layer in batch
+        :return char_out: character outputs from network
+        '''
+        out, self.hidden = self.lstm(x, self.hidden)
+        char_out = self.dense(out)
+        return char_out
+
+
+
+def create_network(batch_size, hidden_units, num_layers=1):
+    lstm = nn.LSTM(input_size=batch_size,
+                   hidden_size=hidden_units,
+                   num_layers=num_layers)
+
+    return lstm
