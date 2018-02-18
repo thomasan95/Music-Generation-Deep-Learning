@@ -5,6 +5,9 @@ import string
 
 
 def char_to_int():
+    '''
+    :return: a dictionary to tokenize all printable characters
+    '''
     characters = string.printable
     char2int = {}
     for i, c in enumerate(characters):

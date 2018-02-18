@@ -17,48 +17,6 @@ parser.add_argument("-s", "--split_pct", type=float, default=0.8, help="Specify 
 parser.add_argument("-t", "--training", type=bool, default=True, help="Specify boolean whether network is to train or to generate")
 args = parser.parse_args()
 
-# # Batch Size
-# if args.batch_size:
-#     batch_size = int(args.batch_size)
-# else:
-#     batch_size = 32
-# # Max Epochs
-# if args.max_epochs:
-#     max_epochs = int(args.max_epochs)
-# else:
-#     max_epochs = 2000
-# # Number of hidden units
-# if args.num_units:
-#     num_units = int(args.num_units)
-# else:
-#     num_units = 100
-# # Number of layers for the network
-# if args.num_layers:
-#     num_layers = int(num_layers)
-# else:
-#     num_layers = 1
-# # Specify learning rate to train at
-# if args.learning_rate:
-#     lr = float(args.learning_rate)
-# else:
-#     lr = 0.001
-# # Specify amount of data to split into test and training
-# if args.split_pct:
-#     split_pct = float(args.split_pct)
-# else:
-#     split_pct = 0.8
-# # Specify whether to load a previous model or not
-# if args.resume:
-#     resume = True
-# else:
-#     resume = False
-#
-# # Specify whether the model is to train or generate
-# if args.training:
-#     training = args.training
-# else:
-#     training = False
-
 
 def train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int, update_check=100,):
     gpu = torch.cuda.is_available()
@@ -145,13 +103,5 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
     #     generate_music(model)
 
 if __name__=="__main__":
-    # global batch_size
-    # global max_epochs
-    # global num_units
-    # global num_layers
-    # global lr
-    # global split_pct
-    # global training
-    # global resume
     main(args.batch_size, args.max_epochs, args.num_units, args.num_layers,
          args.lr, args.split_pct, args.training, args.resume)
