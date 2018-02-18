@@ -12,10 +12,10 @@ class LSTM(nn.Module):
         self.batch_size = batch_size
 
         # Create LSTM network
+        self.emb = nn.Embedding(batch_size, hidden_units)
         self.lstm = nn.LSTM(input_size=batch_size,
                             hidden_size=hidden_units,
                             num_layers=num_layers)
-
         self.dense = nn.Linear(hidden_units, num_outputs)
 
         self.hidden = self.init_hidden()
@@ -31,15 +31,17 @@ class LSTM(nn.Module):
         :param c: initial cell state for each layer in batch
         :return char_out: character outputs from network
         '''
-        out, self.hidden = self.lstm(x, self.hidden)
+        # Use 1's because we want character level
+        x = self.emb(x.view(1, -1))
+        out, self.hidden = self.lstm(x.view(1, 1, -1), self.hidden)
         char_out = self.dense(out)
         return char_out
 
 
 
-def create_network(batch_size, hidden_units, num_layers=1):
-    lstm = nn.LSTM(input_size=batch_size,
-                   hidden_size=hidden_units,
-                   num_layers=num_layers)
-
-    return lstm
+# def create_network(batch_size, hidden_units, num_layers=1):
+#     lstm = nn.LSTM(input_size=batch_size,
+#                    hidden_size=hidden_units,
+#                    num_layers=num_layers)
+#
+#     return lstm
