@@ -1,8 +1,8 @@
 import torch
-from data.network import LSTM
+from network import LSTM
 import argparse
 import torch.optim as optim
-
+import string
 
 def train(batch_size, hidden_units, num_layers, num_outputs, max_epochs, lr=0.001):
     gpu = torch.cuda.is_available()
@@ -22,7 +22,9 @@ def train(batch_size, hidden_units, num_layers, num_outputs, max_epochs, lr=0.00
 
 
 def main(batch_size, max_epochs, num_units):
-    pass
+    characters = string.printable
+    
+
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()

@@ -4,4 +4,8 @@ import sklearn
 
 
 def grab_data(batch_size=32):
-    pass
+    file = './data/input.txt'
+    data = np.loadtxt(file)
+    print(data.shape)
+
+grab_data()
