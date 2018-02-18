@@ -3,10 +3,13 @@ from network import LSTM
 import argparse
 import torch.optim as optim
 import string
+import utilities as utils
 
-def train(batch_size, hidden_units, num_layers, num_outputs, max_epochs, lr=0.001):
+def train(data, batch_size, hidden_units, num_layers, num_outputs, max_epochs, lr=0.001):
     gpu = torch.cuda.is_available()
     lstm = LSTM.LSTM(batch_size, hidden_units, num_layers, num_outputs)
+    losses = {'train': [], 'valid': []}
+    accuracies = {'train': [], 'valid': []}
 
     # If GPU is available, change network to run on GPU
     if gpu:
@@ -17,8 +20,21 @@ def train(batch_size, hidden_units, num_layers, num_outputs, max_epochs, lr=0.00
     optimizer = optim.Adam(lstm.parameters(), lr=lr)
 
     for epoch_i in range(max_epochs):
-        lstm.zero_grad()
+        loss = 0
+        curr_loss = 0
+        batch_x, batch_y = utils.random_data_sample(data, batch_size)
         lstm.hidden = lstm.init_hidden()
+        for index in range(len(batch_x)):
+            lstm.zero_grad()
+            output = lstm(batch_x[index])
+            loss += criterion(output, batch_y[index])
+            curr_loss += loss.data[0]
+        loss.backward()
+        optimizer.step()
+        curr_loss = curr_loss/len(batch_x)
+        losses['train'].append(curr_loss)
+
+
 
 
 def main(batch_size, max_epochs, num_units):
