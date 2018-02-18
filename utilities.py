@@ -14,3 +14,4 @@ def random_data_sample(data, batch_size):
     x = data[random_idx:random_idx + batch_size]
     y = data[random_idx + 1:random_idx + batch_size + 1]
     return x, y
+
