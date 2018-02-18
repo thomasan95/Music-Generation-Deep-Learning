@@ -42,12 +42,3 @@ class LSTM(nn.Module):
         out, self.hidden = self.lstm(x.view(1, 1, -1), self.hidden)
         char_out = self.dense(out)
         return char_out
-
-
-
-# def create_network(batch_size, hidden_units, num_layers=1):
-#     lstm = nn.LSTM(input_size=batch_size,
-#                    hidden_size=hidden_units,
-#                    num_layers=num_layers)
-#
-#     return lstm
