@@ -84,11 +84,9 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
     with open('./data/input.txt', 'r') as f:
         inp = f.read()
         char2int = utils.char_to_int(inp)
+        train_data, valid_data = utils.grab_data(split_pct)
 
-    characters = string.printable
-    num_outputs = len(characters)
-
-    train_data, valid_data = utils.grab_data(split_pct)
+    num_outputs = len(char2int)
 
     # Initialize recurrent network
     model = LSTM.LSTM(batch_size, num_units, num_layers, num_outputs)

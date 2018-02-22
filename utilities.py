@@ -1,15 +1,15 @@
 import torch
 import unidecode
 import random
-import string
-import collections
+
 
 def char_to_int(text):
     '''
     :param text: pass in the entire text to get tokenized
     :param char2int: dictionary to add to
-    :return: a dictionary to tokenize all printable characters
+    :return: a dictionary to tokenize all ABC characters
     '''
+
     assert isinstance(text, str)
 
     char2int = {}
@@ -21,17 +21,15 @@ def char_to_int(text):
     return char2int
 
 
-def grab_data(split_pct):
+def grab_data(split_pct, music_data):
     '''
     utility function to read in the data
     :param split_pct: amount of data to split into validation and test
     :return: training and validation sets
     '''
-    assert split_pct>=0 and split_pct<=1.0
+    assert 0 <= split_pct <= 1.0
     assert isinstance(float, split_pct)
 
-    f = './data/input.txt'
-    music_data = unidecode.unidecode(open(f).read())
     n = len(music_data)
     split_idx = int(music_data*0.8)
     return music_data[:split_idx], music_data[split_idx:]
@@ -60,6 +58,7 @@ def string_to_tensor(string, dictionary):
     '''
     assert isinstance(string, str)
     assert isinstance(dictionary, dict)
+
     tensor = torch.zeros(len(string)).long()
     for i, c in enumerate(string):
         tensor[i] = dictionary[c]
