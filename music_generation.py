@@ -83,6 +83,11 @@ def generate_music(model):
 
 
 def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training, resume):
+
+    with open('./data/input.txt', 'r') as f:
+        inp = f.read()
+        char2int = utils.char_to_int(inp)
+
     characters = string.printable
     num_outputs = len(characters)
 
@@ -99,7 +104,7 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
 
     # Grab tokenizing dictionary, values are based off characters since we are doing character
     # by character generation
-    char2int = utils.char_to_int()
+    # char2int = utils.char_to_int()
 
     # if training:
     model, losses = train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int)

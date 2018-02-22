@@ -4,13 +4,14 @@ import random
 import string
 import collections
 
-def char_to_int(text, value, char2int):
+def char_to_int(text):
     '''
     :param text: pass in the entire text to get tokenized
-    :param value: current index of the tokenization
     :param char2int: dictionary to add to
     :return: a dictionary to tokenize all printable characters
     '''
+    char2int = {}
+    value = 0
     for c in text:
         if c not in char2int:
             char2int[c] = value
