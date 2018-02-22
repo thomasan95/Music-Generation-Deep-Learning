@@ -7,6 +7,10 @@ import string
 import utilities as utils
 import numpy as np
 
+
+if __name__=="__main__":
+    main(args.batch_size, args.max_epochs, args.num_units, args.num_layers,
+         args.lr, args.split_pct, args.training, args.resume)
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=32, help="Specify batch size for network")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
@@ -15,6 +19,7 @@ parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="S
 parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify number of layers for network")
 parser.add_argument("-s", "--split_pct", type=float, default=0.8, help="Specify how much of training data to keep and rest for validation")
 parser.add_argument("-t", "--training", type=bool, default=True, help="Specify boolean whether network is to train or to generate")
+parser.add_argument("-r", "--resume", type=bool, default=False, help="Specify boolean whether to load a saved network")
 args = parser.parse_args()
 
 
