@@ -8,9 +8,6 @@ import utilities as utils
 import numpy as np
 
 
-if __name__=="__main__":
-    main(args.batch_size, args.max_epochs, args.num_units, args.num_layers,
-         args.lr, args.split_pct, args.training, args.resume)
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=32, help="Specify batch size for network")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
@@ -100,7 +97,7 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
     criterion = torch.nn.CrossEntropyLoss()
 
     # Initialize optimizer for network
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.SGD(model.parameters(), lr=lr)
 
     # Grab tokenizing dictionary, values are based off characters since we are doing character
     # by character generation

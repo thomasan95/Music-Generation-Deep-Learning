@@ -10,6 +10,8 @@ def char_to_int(text):
     :param char2int: dictionary to add to
     :return: a dictionary to tokenize all printable characters
     '''
+    assert isinstance(text, str)
+
     char2int = {}
     value = 0
     for c in text:
@@ -56,6 +58,8 @@ def string_to_tensor(string, dictionary):
     :param dictionary: char2int dictionary to tokenize the string
     :return: tensor of tokenized string
     '''
+    assert isinstance(string, str)
+    assert isinstance(dictionary, dict)
     tensor = torch.zeros(len(string)).long()
     for i, c in enumerate(string):
         tensor[i] = dictionary[c]
