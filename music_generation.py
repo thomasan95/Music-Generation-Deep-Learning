@@ -15,14 +15,16 @@ parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="S
 parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify number of layers for network")
 parser.add_argument("-s", "--split_pct", type=float, default=0.8,
                     help="Specify how much of training data to keep and rest for validation")
-parser.add_argument("-t", "--training", type=bool, default=True,
+parser.add_argument("-t", "--training", type=str, default='true',
                     help="Specify boolean whether network is to train or to generate")
 parser.add_argument("-r", "--resume", type=bool, default=False, help="Specify boolean whether to load a saved network")
 parser.add_argument("-d", "--dropout", type=float, default=0, help="Specify amount of dropout after each layer in LSTM")
 parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify whether use GRU or LSTM")
 parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How often to check save model")
 parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="Input file to train on")
-parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt')
+parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt', help="Path to save generated file")
+parser.add_argument("-gc", "--generate_length", type=int, default=100000, help="How many characters to generate")
+parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
 args = parser.parse_args()
 
 
@@ -99,12 +101,30 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     return model, losses
 
 
-def generate_music(model, file=args.generate_file):
-    primer = input("Please enter text to prime network")
+def generate_music(model, char2int, int2char, file=args.generate_file):
+    print("Inside Generate Music")
+    primer = input("Please enter text to prime network: ")
+    return_string = primer
     with open(file, 'w') as f:
-        preds = []
-        for ii in range(len(primer)):
-            preds.append(model(primer[ii]).data.cpu().numpy().tolist())
+        primer = utils.string_to_tensor(primer, char2int)
+        primer = Variable(primer)
+        for i in range(len(primer) - 1):
+            _ = model(primer[i])
+        inp = primer[-1]
+
+        for c_idx in range(args.generate_length):
+            out = model(inp)
+            # Normalize distribution by temperature
+            out = out.data.view(-1).div(args.temperature).exp()
+            out = out.div(out.sum())
+            # Sample 1 from multinomial distribution
+            next_input = torch.multinomial(out, 1)[0]
+            predictions = int2char[next_input]
+            return_string += predictions
+            inp = Variable(utils.string_to_tensor(predictions, char2int))
+        f.write(return_string)
+        f.close()
+
 
 
 def main():
@@ -134,11 +154,11 @@ def main():
     # Initialize optimizer for network
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
-    if args.training:
+    if args.training == 'true':
         _, _ = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int, int2char)
     else:
-        model, optimizer, epoch = utils.resume(model, criterion, optimizer)
-        generate_music(model)
+        model = utils.resume(model)
+        generate_music(model, char2int, int2char)
 
 
 if __name__=="__main__":
