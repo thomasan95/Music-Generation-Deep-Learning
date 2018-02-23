@@ -33,6 +33,18 @@ gpu = torch.cuda.is_available()
 
 
 def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int):
+    '''
+    Function trains the model. It will save the current model every update_check iterations so model can then be
+    loaded and resumed either for training or for music generation in the future
+    :param model: Recurrent network model to be passed in
+    :param train_data: type str, data to be passed in to be considered as part of training
+    :param valid_data: type str, data to be passed in to be considered as part of validation
+    :param batch_size: initial batch size to start with for training
+    :param criterion: Loss function to be used (CrossEntropyLoss)
+    :param optimizer: PyTorch optimizer to user in the training process (Adam or SGD or RMSProp)
+    :param char2int: type dict, Dictionary to tokenize the batches
+    :return:
+    '''
     if gpu:
         batch_size = batch_size*10
         print("GPU BATCH")
@@ -120,6 +132,15 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
 
 def generate_music(model, char2int, int2char, file=args.generate_file, num_samples=1):
+    '''
+    Generate music will be called when args.training is set to 'false'. In that case, the function will generate
+    a certain amount of characters specified by args.generate_length.
+    :param model: Loaded model from main() to be passed into network
+    :param char2int: type dict, Dictionary to convert characters to integers
+    :param int2char: type dict, Dictionary to convert integers to characters
+    :param file: type str, File path to save the generated music to
+    :param num_samples:
+    '''
     if gpu:
         model = model.cuda()
 

@@ -3,11 +3,13 @@ import random
 
 
 def grab_data(split_pct, music_data):
+
     ''' Utility function to read in the data
     :param split_pct: amount of data to split into validation and test
     :param music_data: The music file in ABC format in one continuous string
     :return: training and validation sets
     '''
+
     assert 0 <= split_pct <= 1.0
     assert isinstance(split_pct, float)
 
