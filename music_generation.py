@@ -103,7 +103,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
         if epoch_i % 100 == 0 and epoch_i > 0:
             times = np.asarray(times)
-            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Becn:%f" %
+            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Batch:%f" %
                   (epoch_i, curr_loss, avg_val_loss, np.mean(times).astype(float)))
             times =  []
 
