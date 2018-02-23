@@ -17,7 +17,7 @@ class GRU(nn.Module):
         self.num_layers = num_layers
         self.batch_size = batch_size
 
-        # Create LSTM network
+        # Create GRU network
         # self.emb = nn.Embedding(batch_size, hidden_units)
 
         self.gru = nn.GRU(input_size=batch_size,
