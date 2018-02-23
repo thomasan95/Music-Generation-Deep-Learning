@@ -31,19 +31,18 @@ args = parser.parse_args()
 gpu = torch.cuda.is_available()
 
 def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int, int2char):
-    checkpoint = './data/checkpoint-'+str(args.network)+'.pth.tar'
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
     min_loss = 0
 
     valid_x, valid_y = valid_data[:-1], valid_data[1:]
     valid_x, valid_y = utils.string_to_tensor(valid_x, char2int), utils.string_to_tensor(valid_y, char2int, labels=True)
-    valid_x, valid_y = Variable(valid_x), Variable(valid_y).long()
+    valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
     # If GPU is available, change network to run on GPU
     if gpu:
         model = model.cuda()
-        valid_x, valid_y = valid_x.cuda(), valid_y.cuda().long()
+        valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
 
     for epoch_i in range(args.max_epochs):
         loss = 0
@@ -58,7 +57,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
         batch_x, batch_y = Variable(batch_x), Variable(batch_y)
 
         if gpu:
-            batch_x, batch_y = batch_x.cuda(), batch_y.cuda().long()
+            batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
         # Initialize model state
         model.hidden = model.init_hidden()
@@ -101,7 +100,8 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
                 min_loss = update_loss
                 utils.checkpoint({'epoch': epoch_i,
                                   'state_dict': model.state_dict(),
-                                  'optimizer': optimizer.state_dict()}, checkpoint)
+                                  'optimizer': optimizer.state_dict()},
+                                 './data/saves/checkpoint-'+str(args.network)+'-'+str(epoch_i)+'.pth.tar')
     return model, losses
 
 
@@ -109,7 +109,6 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
     if gpu:
         model = model.cuda()
 
-    print("Inside Generate Music")
     primer = input("Please enter text to prime network: ")
     return_string = primer
 
