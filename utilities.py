@@ -47,7 +47,7 @@ def random_data_sample(data, batch_size):
     :param batch_size: batch_size
     :return: an input and target values returned for network
     '''
-    assert isinstance(int,batch_size)
+    assert isinstance(batch_size, int)
 
     n = len(data)
     random_idx = random.randint(0, n - batch_size - 1)

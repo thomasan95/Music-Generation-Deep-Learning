@@ -3,15 +3,13 @@ from network import LSTM
 import argparse
 import torch.optim as optim
 from torch.autograd import Variable
-import string
 import utilities as utils
-import numpy as np
 
 
 parser = argparse.ArgumentParser(description="Specify parameters for network")
-parser.add_argument("-bz", "--batch_size", type=int, default=32, help="Specify batch size for network")
+parser.add_argument("-bz", "--batch_size", type=int, default=20, help="Specify batch size for network")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
-parser.add_argument("-e", "--max_epochs", type=int, default=2000, help="Specify number of epochs to train network")
+parser.add_argument("-e", "--max_epochs", type=int, default=20000, help="Specify number of epochs to train network")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="Specify learning rate of the network")
 parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify number of layers for network")
 parser.add_argument("-s", "--split_pct", type=float, default=0.8, help="Specify how much of training data to keep and rest for validation")
@@ -34,13 +32,11 @@ def train(model, train_data, valid_data, batch_size, max_epochs, criterion, opti
         curr_loss = 0
 
         # Slowly increase batch_size during training
-        if epoch_i % 100 == 0 and epoch_i > 0:
+        if epoch_i % 1000 == 0 and epoch_i > 0:
             batch_size = batch_size + 5
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, batch_size)
-        # batch_x = train_data[0:20]
-        # batch_y = train_data[1:21]
         batch_x, batch_y = utils.string_to_tensor(batch_x, char2int), utils.string_to_tensor(batch_y, char2int, labels=True)
         batch_x, batch_y = Variable(batch_x), Variable(batch_y)
 
@@ -48,7 +44,7 @@ def train(model, train_data, valid_data, batch_size, max_epochs, criterion, opti
             batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
         print("Done Processing Batch")
-        # Initialize model state
+        # Initialize model statebat
         model.hidden = model.init_hidden()
 
         for index in range(len(batch_x)):
@@ -110,7 +106,8 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
     criterion = torch.nn.CrossEntropyLoss()
 
     # Initialize optimizer for network
-    optimizer = optim.SGD(model.parameters(), lr=lr)
+    # optimizer = optim.SGD(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
     # if training:
     model, losses = train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int, int2char)
