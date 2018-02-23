@@ -30,7 +30,7 @@ args = parser.parse_args()
 
 gpu = torch.cuda.is_available()
 
-def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int, int2char):
+def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int):
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
     min_loss = 0
@@ -167,7 +167,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
     if args.training == 'true':
-        _, _ = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int, int2char)
+        _, _ = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int)
     else:
         model = utils.resume(model)
         generate_music(model, char2int, int2char)
