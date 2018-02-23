@@ -17,14 +17,6 @@ import random
 #     for i, c in enumerate(chars):
 #         char2int[c] = i
 #     return char2int
-#
-#     # char2int = {}
-#     # value = 0
-#     # for c in text:
-#     #     if c not in char2int:
-#     #         char2int[c] = value
-#     #         value += 1
-#     # return char2int
 
 
 def grab_data(split_pct, music_data):
@@ -84,7 +76,15 @@ def resume(model, optimizer, filepath='./saves/checkpoint.pth.tar'):
     optimizer.load_state_dict(f['optimizer'])
     return model, optimizer, epoch
 
+def get_accuracy(preds, labels):
+    pass
 
+
+def early_stop(val_loss):
+    if val_loss[-1] > val_loss[-2] and val_loss[-2] > val_loss[-3]:
+        return True
+    else:
+        return False
 def reverse_lookup_dict(dictionary):
     '''
     Create reverse lookup dictionary for converting prediction numbers to characters
