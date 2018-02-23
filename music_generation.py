@@ -22,6 +22,7 @@ parser.add_argument("-d", "--dropout", type=float, default=0, help="Specify amou
 parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify whether use GRU or LSTM")
 parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How often to check save model")
 parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="Input file to train on")
+parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt')
 args = parser.parse_args()
 
 
@@ -98,8 +99,12 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     return model, losses
 
 
-def generate_music(model):
-    pass # To Do
+def generate_music(model, file=args.generate_file):
+    primer = input("Please enter text to prime network")
+    with open(file, 'w') as f:
+        preds = []
+        for ii in range(len(primer)):
+            preds.append(model(primer[ii]).data.cpu().numpy().tolist())
 
 
 def main():
@@ -130,7 +135,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
     if args.training:
-        model, losses = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int, int2char)
+        _, _ = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int, int2char)
     else:
         model, optimizer, epoch = utils.resume(model, criterion, optimizer)
         generate_music(model)

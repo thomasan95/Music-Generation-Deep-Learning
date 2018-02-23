@@ -3,8 +3,7 @@ import random
 
 
 def grab_data(split_pct, music_data):
-    '''
-    utility function to read in the data
+    ''' Utility function to read in the data
     :param split_pct: amount of data to split into validation and test
     :param music_data: The music file in ABC format in one continuous string
     :return: training and validation sets
