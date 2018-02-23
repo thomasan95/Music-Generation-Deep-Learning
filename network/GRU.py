@@ -32,7 +32,10 @@ class GRU(nn.Module):
         Initializes the hidden state weight matrix of the GRU network
         :return: Initialized weight matrix
         '''
-        return nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)))
+        if torch.cuda.is_available():
+            return nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)).cuda())
+        else:
+            return nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)))
 
     def forward(self, x):
         '''

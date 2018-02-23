@@ -29,8 +29,12 @@ class LSTM(nn.Module):
         self.hidden = self.init_hidden()
 
     def init_hidden(self):
-        return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))),
-                nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))))
+        if torch.cuda.is_available():
+            return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)).cuda()),
+                    nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)).cuda()))
+        else:
+            return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))),
+                    nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))))
 
     def forward(self, x):
         '''
