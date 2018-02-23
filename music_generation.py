@@ -25,21 +25,25 @@ parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="
 parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt', help="Path to save generated file")
 parser.add_argument("-gc", "--generate_length", type=int, default=100000, help="How many characters to generate")
 parser.add_argument("-temp", "--temperature", type=float, default=1, help="Temperature for network")
+
 args = parser.parse_args()
 
+gpu = torch.cuda.is_available()
 
 def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int, int2char):
-    gpu = torch.cuda.is_available()
+
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
     min_loss = 0
-    # If GPU is available, change network to run on GPU
-    if gpu:
-        model = model.cuda()
 
     valid_x, valid_y = valid_data[:-1], valid_data[1:]
     valid_x, valid_y = utils.string_to_tensor(valid_x, char2int), utils.string_to_tensor(valid_y, char2int, labels=True)
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
+
+    # If GPU is available, change network to run on GPU
+    if gpu:
+        model = model.cuda()
+        valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
 
     for epoch_i in range(args.max_epochs):
         loss = 0
@@ -102,12 +106,19 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
 
 def generate_music(model, char2int, int2char, file=args.generate_file, num_samples=1):
+    if gpu:
+        model = model.cuda()
+
     print("Inside Generate Music")
     primer = input("Please enter text to prime network: ")
     return_string = primer
+
     with open(file, 'w') as f:
         primer_input = primer[:-1]
         primer_input = Variable(utils.string_to_tensor(primer_input, char2int))
+        if gpu:
+            primer_input = primer_input.cuda()
+
         for i in range(len(primer_input)):
             _ = model(primer_input[i])
 
@@ -123,6 +134,8 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
             predict_char = int2char[next_input]
             return_string += predict_char
             inp = Variable(utils.string_to_tensor(predict_char, char2int))
+            if gpu:
+                inp = inp.cuda()
         f.write(return_string)
         f.close()
 
