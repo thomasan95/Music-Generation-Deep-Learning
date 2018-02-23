@@ -55,12 +55,12 @@ def checkpoint(state, file_name='./saves/checkpoint.pth.tar'):
     torch.save(state, file_name)
 
 
-def resume(model, optimizer, filepath='./saves/checkpoint.pth.tar'):
+def resume(model, filepath='./saves/checkpoint.pth.tar'):
     f = torch.load(filepath)
-    epoch = f['epoch']
+    # epoch = f['epoch']
     model.load_state_dict(f['state_dict'])
-    optimizer.load_state_dict(f['optimizer'])
-    return model, optimizer, epoch
+    # optimizer.load_state_dict(f['optimizer'])
+    return model
 
 def get_accuracy(preds, labels):
     pass
