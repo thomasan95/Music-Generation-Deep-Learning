@@ -1,5 +1,5 @@
 import torch
-from network import LSTM
+from network import LSTM, GRU
 import argparse
 import torch.optim as optim
 from torch.autograd import Variable
@@ -16,6 +16,8 @@ parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify num
 parser.add_argument("-s", "--split_pct", type=float, default=0.8, help="Specify how much of training data to keep and rest for validation")
 parser.add_argument("-t", "--training", type=bool, default=True, help="Specify boolean whether network is to train or to generate")
 parser.add_argument("-r", "--resume", type=bool, default=False, help="Specify boolean whether to load a saved network")
+parser.add_argument("-d", "--dropout", type=float, default=0, help="Specify amount of dropout after each layer in LSTM")
+parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify whether use GRU or LSTM")
 args = parser.parse_args()
 
 
@@ -23,10 +25,7 @@ def train(model, train_data, valid_data, batch_size, max_epochs, criterion, opti
     gpu = torch.cuda.is_available()
     losses = {'train': [], 'valid': []}
     min_loss = 0
-    valid_loss = 0
     avg_val_loss = 0
-    early_stop = False
-    num_outputs = len(char2int)
     # If GPU is available, change network to run on GPU
     if gpu:
         model = model.cuda()
@@ -56,6 +55,7 @@ def train(model, train_data, valid_data, batch_size, max_epochs, criterion, opti
             model.zero_grad()
             output = model(batch_x[index])
             loss += criterion(torch.squeeze(output, dim=1), batch_y[index])
+
         curr_loss = loss.data[0]
         loss.backward()
         optimizer.step()
@@ -90,7 +90,6 @@ def train(model, train_data, valid_data, batch_size, max_epochs, criterion, opti
                 utils.checkpoint({'epoch': epoch_i,
                                   'state_dict': model.state_dict(),
                                   'optimizer': optimizer.state_dict()})
-
     return model, losses
 
 
@@ -113,14 +112,17 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
     num_outputs = len(char2int)
 
     # Initialize recurrent network
-    # model = LSTM.LSTM(batch_size, num_units, num_layers, num_outputs)
-    model = LSTM.LSTM(1, num_units, num_layers, num_outputs)
+    if args.network == 'GRU':
+        print("Using GRU Network")
+        model = GRU.GRU(1, num_units, num_layers, num_outputs, args.dropout)
+    else:
+        print("Using LSTM Network")
+        model = LSTM.LSTM(1, num_units, num_layers, num_outputs, args.dropout)
 
     # Initialize Loss function for network
     criterion = torch.nn.CrossEntropyLoss()
 
     # Initialize optimizer for network
-    # optimizer = optim.SGD(model.parameters(), lr=lr)
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     # if training:
