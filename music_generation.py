@@ -13,8 +13,10 @@ parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify h
 parser.add_argument("-e", "--max_epochs", type=int, default=100000, help="Specify number of epochs to train network")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="Specify learning rate of the network")
 parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify number of layers for network")
-parser.add_argument("-s", "--split_pct", type=float, default=0.8, help="Specify how much of training data to keep and rest for validation")
-parser.add_argument("-t", "--training", type=bool, default=True, help="Specify boolean whether network is to train or to generate")
+parser.add_argument("-s", "--split_pct", type=float, default=0.8,
+                    help="Specify how much of training data to keep and rest for validation")
+parser.add_argument("-t", "--training", type=bool, default=True,
+                    help="Specify boolean whether network is to train or to generate")
 parser.add_argument("-r", "--resume", type=bool, default=False, help="Specify boolean whether to load a saved network")
 parser.add_argument("-d", "--dropout", type=float, default=0, help="Specify amount of dropout after each layer in LSTM")
 parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify whether use GRU or LSTM")
@@ -26,8 +28,8 @@ args = parser.parse_args()
 def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int, int2char):
     gpu = torch.cuda.is_available()
     losses = {'train': [], 'valid': []}
-    min_loss = 0
     avg_val_loss = 0
+    min_loss = 0
     # If GPU is available, change network to run on GPU
     if gpu:
         model = model.cuda()
@@ -44,7 +46,8 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, batch_size)
-        batch_x, batch_y = utils.string_to_tensor(batch_x, char2int), utils.string_to_tensor(batch_y, char2int, labels=True)
+        batch_x = utils.string_to_tensor(batch_x, char2int)
+        batch_y = utils.string_to_tensor(batch_y, char2int, labels=True)
         batch_x, batch_y = Variable(batch_x), Variable(batch_y)
 
         if gpu:
