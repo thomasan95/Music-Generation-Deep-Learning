@@ -17,7 +17,6 @@ parser.add_argument("-s", "--split_pct", type=float, default=0.8,
                     help="Specify how much of training data to keep and rest for validation")
 parser.add_argument("-t", "--training", type=str, default='true',
                     help="Specify boolean whether network is to train or to generate")
-parser.add_argument("-r", "--resume", type=bool, default=False, help="Specify boolean whether to load a saved network")
 parser.add_argument("-d", "--dropout", type=float, default=0, help="Specify amount of dropout after each layer in LSTM")
 parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify whether use GRU or LSTM")
 parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How often to check save model")
@@ -25,12 +24,16 @@ parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="
 parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt', help="Path to save generated file")
 parser.add_argument("-gc", "--generate_length", type=int, default=100000, help="How many characters to generate")
 parser.add_argument("-temp", "--temperature", type=float, default=1, help="Temperature for network")
+parser.add_argument("--save_append", type=str, default="", help="What to append to save path to make it unique")
+parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
 
 args = parser.parse_args()
 
 gpu = torch.cuda.is_available()
 
 def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int):
+    if gpu:
+        batch_size = batch_size*50
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
     min_loss = 0
@@ -48,7 +51,10 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
         loss = 0
         # Slowly increase batch_size during training
         if epoch_i % 2000 == 0 and epoch_i > 0:
-            batch_size = batch_size + 5
+            if gpu:
+                batch_size = batch_size + 100
+            else:
+                batch_size = batch_size + 5
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, batch_size)
@@ -101,7 +107,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
                 utils.checkpoint({'epoch': epoch_i,
                                   'state_dict': model.state_dict(),
                                   'optimizer': optimizer.state_dict()},
-                                 './data/saves/checkpoint-'+str(args.network)+'-'+str(epoch_i)+'.pth.tar')
+                                 './saves/checkpoint-'+str(args.network)+'-'+str(args.save_append)+'.pth.tar')
     return model, losses
 
 
@@ -169,7 +175,7 @@ def main():
     if args.training == 'true':
         _, _ = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int)
     else:
-        model = utils.resume(model)
+        model = utils.resume(model, file=)
         generate_music(model, char2int, int2char)
 
 
