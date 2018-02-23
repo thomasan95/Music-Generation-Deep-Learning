@@ -34,6 +34,7 @@ gpu = torch.cuda.is_available()
 def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int):
     if gpu:
         batch_size = batch_size*50
+        print("GPU BATCH")
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
     min_loss = 0
@@ -55,6 +56,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
                 batch_size = batch_size + 100
             else:
                 batch_size = batch_size + 5
+            print("Batch size changed to: " + str(batch_size))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, batch_size)
