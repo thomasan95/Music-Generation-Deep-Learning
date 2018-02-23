@@ -24,7 +24,7 @@ parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How o
 parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="Input file to train on")
 parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt', help="Path to save generated file")
 parser.add_argument("-gc", "--generate_length", type=int, default=100000, help="How many characters to generate")
-parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
+parser.add_argument("-temp", "--temperature", type=float, default=1, help="Temperature for network")
 args = parser.parse_args()
 
 
@@ -101,27 +101,28 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     return model, losses
 
 
-def generate_music(model, char2int, int2char, file=args.generate_file):
+def generate_music(model, char2int, int2char, file=args.generate_file, num_samples=1):
     print("Inside Generate Music")
     primer = input("Please enter text to prime network: ")
     return_string = primer
     with open(file, 'w') as f:
-        primer = utils.string_to_tensor(primer, char2int)
-        primer = Variable(primer)
-        for i in range(len(primer) - 1):
-            _ = model(primer[i])
-        inp = primer[-1]
+        primer_input = primer[:-1]
+        primer_input = Variable(utils.string_to_tensor(primer_input, char2int))
+        for i in range(len(primer_input)):
+            _ = model(primer_input[i])
+
+        inp = Variable(utils.string_to_tensor(primer[-1], char2int))
 
         for c_idx in range(args.generate_length):
             out = model(inp)
-            # Normalize distribution by temperature
-            out = out.data.view(-1).div(args.temperature).exp()
+            # Normalize distribution by temperature and turn into a vector
+            out = out.data.view(-1).exp()
             out = out.div(out.sum())
-            # Sample 1 from multinomial distribution
-            next_input = torch.multinomial(out, 1)[0]
-            predictions = int2char[next_input]
-            return_string += predictions
-            inp = Variable(utils.string_to_tensor(predictions, char2int))
+            # Sample num_samples from multinomial distribution
+            next_input = torch.multinomial(out, num_samples)[0]
+            predict_char = int2char[next_input]
+            return_string += predict_char
+            inp = Variable(utils.string_to_tensor(predict_char, char2int))
         f.write(return_string)
         f.close()
 
