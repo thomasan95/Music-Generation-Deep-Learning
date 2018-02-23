@@ -19,6 +19,7 @@ parser.add_argument("-r", "--resume", type=bool, default=False, help="Specify bo
 parser.add_argument("-d", "--dropout", type=float, default=0, help="Specify amount of dropout after each layer in LSTM")
 parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify whether use GRU or LSTM")
 parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How often to check save model")
+parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="Input file to train on")
 args = parser.parse_args()
 
 
@@ -99,7 +100,7 @@ def generate_music(model):
 
 
 def main():
-    with open('./data/input.txt', 'r') as f:
+    with open(args.file, 'r') as f:
         inp = f.read()
         # Create tokenizing dictionary for text in ABC notation
         char2int = dict((a,b) for b,a in enumerate(list(set(inp))))
