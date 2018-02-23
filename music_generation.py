@@ -34,7 +34,7 @@ gpu = torch.cuda.is_available()
 
 def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int):
     if gpu:
-        batch_size = batch_size*50
+        batch_size = batch_size*10
         print("GPU BATCH")
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
@@ -55,7 +55,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
         if epoch_i % 2000 == 0 and epoch_i > 0:
             if gpu:
-                batch_size = batch_size + 100
+                batch_size = batch_size + 50
             else:
                 batch_size = batch_size + 5
             print("Batch size changed to: " + str(batch_size))
