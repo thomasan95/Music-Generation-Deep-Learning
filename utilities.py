@@ -3,22 +3,28 @@ import unidecode
 import random
 
 
-def char_to_int(text):
-    '''
-    :param text: pass in the entire text to get tokenized
-    :param char2int: dictionary to add to
-    :return: a dictionary to tokenize all ABC characters
-    '''
-
-    assert isinstance(text, str)
-
-    char2int = {}
-    value = 0
-    for c in text:
-        if c not in char2int:
-            char2int[c] = value
-            value += 1
-    return char2int
+# def char_to_int(text):
+#     '''
+#     :param text: pass in the entire text to get tokenized
+#     :param char2int: dictionary to add to
+#     :return: a dictionary to tokenize all ABC characters
+#     '''
+#
+#     assert isinstance(text, str)
+#
+#     chars = list(set(text))
+#     char2int = {}
+#     for i, c in enumerate(chars):
+#         char2int[c] = i
+#     return char2int
+#
+#     # char2int = {}
+#     # value = 0
+#     # for c in text:
+#     #     if c not in char2int:
+#     #         char2int[c] = value
+#     #         value += 1
+#     # return char2int
 
 
 def grab_data(split_pct, music_data):
@@ -28,10 +34,10 @@ def grab_data(split_pct, music_data):
     :return: training and validation sets
     '''
     assert 0 <= split_pct <= 1.0
-    assert isinstance(float, split_pct)
+    assert isinstance(split_pct, float)
 
     n = len(music_data)
-    split_idx = int(music_data*0.8)
+    split_idx = int(n*0.8)
     return music_data[:split_idx], music_data[split_idx:]
 
 
@@ -50,7 +56,7 @@ def random_data_sample(data, batch_size):
     return x, y
 
 
-def string_to_tensor(string, dictionary):
+def string_to_tensor(string, dictionary, labels=False):
     '''
     :param string: batch string that we would convert to tensor
     :param dictionary: char2int dictionary to tokenize the string
@@ -58,8 +64,10 @@ def string_to_tensor(string, dictionary):
     '''
     assert isinstance(string, str)
     assert isinstance(dictionary, dict)
-
-    tensor = torch.zeros(len(string)).long()
+    if labels:
+        tensor = torch.zeros(len(string)).long()
+    else:
+        tensor = torch.zeros(len(string)).float()
     for i, c in enumerate(string):
         tensor[i] = dictionary[c]
     return tensor
@@ -75,3 +83,15 @@ def resume(model, optimizer, filepath='./saves/checkpoint.pth.tar'):
     model.load_state_dict(f['state_dict'])
     optimizer.load_state_dict(f['optimizer'])
     return model, optimizer, epoch
+
+
+def reverse_lookup_dict(dictionary):
+    '''
+    Create reverse lookup dictionary for converting prediction numbers to characters
+    :param dictionary: tokenizing dictionary
+    :return: reverse lookup dictionary
+    '''
+    lookup = {}
+    for a, b in dictionary.items():
+        lookup[b] = a
+    return lookup

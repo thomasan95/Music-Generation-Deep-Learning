@@ -20,20 +20,16 @@ parser.add_argument("-r", "--resume", type=bool, default=False, help="Specify bo
 args = parser.parse_args()
 
 
-def train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int, update_check=100,):
+def train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int, int2char, update_check=100,):
     gpu = torch.cuda.is_available()
     losses = {'train': [], 'valid': []}
     min_loss = 0
+    num_outputs = len(char2int)
     # If GPU is available, change network to run on GPU
     if gpu:
         model = model.cuda()
 
-    if resume:
-        model, optimizer, curr_epoch = utils.resume(model, optimizer)
-    else:
-        curr_epoch = 0
-
-    for epoch_i in range(max_epochs - curr_epoch):
+    for epoch_i in range(max_epochs):
         loss = 0
         curr_loss = 0
 
@@ -43,34 +39,47 @@ def train(model, train_data, valid_data, batch_size, max_epochs, criterion, opti
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, batch_size)
-        batch_x, batch_y = utils.string_to_tensor(batch_x, char2int), utils.string_to_tensor(batch_y, char2int)
+        # batch_x = train_data[0:20]
+        # batch_y = train_data[1:21]
+        batch_x, batch_y = utils.string_to_tensor(batch_x, char2int), utils.string_to_tensor(batch_y, char2int, labels=True)
         batch_x, batch_y = Variable(batch_x), Variable(batch_y)
 
+        if gpu:
+            batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
+
+        print("Done Processing Batch")
         # Initialize model state
         model.hidden = model.init_hidden()
 
         for index in range(len(batch_x)):
             model.zero_grad()
             output = model(batch_x[index])
-            loss += criterion(output, batch_y[index])
+            loss = criterion(torch.squeeze(output, dim=1), batch_y[index])
             curr_loss += loss.data[0]
+            loss.backward(retain_graph=True)
+            optimizer.step()
 
-        loss.backward()
-        optimizer.step()
+        # print("predictions shape: " +str(len(pred)) + ", " + str(len(pred[0])))
+
+        # loss = criterion(output, batch_y)
+        # curr_loss = loss.data[0]
+        # loss.backward()
+        # optimizer.step()
         curr_loss = curr_loss/len(batch_x)
+        print(curr_loss)
         losses['train'].append(curr_loss)
 
         if epoch_i == 0:
             min_loss = losses['train'][-1]
 
-        if epoch_i%update_check == 0 and epoch_i > 0:
-            update_loss = np.mean(losses['train'][-100:])
-            if update_loss < min_loss:
-                print("New Best Model! Saving!")
-                min_loss = update_loss
-                utils.checkpoint({'epoch': epoch_i,
-                                  'state_dict': model.state_dict(),
-                                  'optimizer': optimizer.state_dict()})
+        # if epoch_i%update_check == 0 and epoch_i > 0:
+        #     update_loss = np.mean(losses['train'][-100:])
+        #     if update_loss < min_loss:
+        #         print("New Best Model! Saving!")
+        #         min_loss = update_loss
+        #         utils.checkpoint({'epoch': epoch_i,
+        #                           'state_dict': model.state_dict(),
+        #                           'optimizer': optimizer.state_dict()})
 
     return model, losses
 
@@ -83,13 +92,19 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
 
     with open('./data/input.txt', 'r') as f:
         inp = f.read()
-        char2int = utils.char_to_int(inp)
-        train_data, valid_data = utils.grab_data(split_pct)
+        # Create tokenizing dictionary for text in ABC notation
+        char2int = dict((a,b) for b,a in enumerate(list(set(inp))))
+        # Create reverse lookup dictionary for the text
+        int2char = {v: k for k, v in char2int.items()}
 
+        train_data, valid_data = utils.grab_data(split_pct, inp)
+
+    # Number of total unique characters
     num_outputs = len(char2int)
 
     # Initialize recurrent network
-    model = LSTM.LSTM(batch_size, num_units, num_layers, num_outputs)
+    # model = LSTM.LSTM(batch_size, num_units, num_layers, num_outputs)
+    model = LSTM.LSTM(1, num_units, num_layers, num_outputs)
 
     # Initialize Loss function for network
     criterion = torch.nn.CrossEntropyLoss()
@@ -97,16 +112,12 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
     # Initialize optimizer for network
     optimizer = optim.SGD(model.parameters(), lr=lr)
 
-    # Grab tokenizing dictionary, values are based off characters since we are doing character
-    # by character generation
-    # char2int = utils.char_to_int()
-
     # if training:
-    model, losses = train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int)
+    model, losses = train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int, int2char)
     # else:
     #     model, optimizer, epoch = utils.resume(model, criterion, optimizer)
     #     generate_music(model)
 
 if __name__=="__main__":
     main(args.batch_size, args.max_epochs, args.num_units, args.num_layers,
-         args.lr, args.split_pct, args.training, args.resume)
+         args.learning_rate, args.split_pct, args.training, args.resume)

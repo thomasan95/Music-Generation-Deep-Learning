@@ -18,19 +18,21 @@ class LSTM(nn.Module):
         self.batch_size = batch_size
 
         # Create LSTM network
-        self.emb = nn.Embedding(batch_size, hidden_units)
+        # self.emb = nn.Embedding(batch_size, hidden_units)
+
         self.lstm = nn.LSTM(input_size=batch_size,
                             hidden_size=hidden_units,
                             num_layers=num_layers)
+
         self.dense = nn.Linear(hidden_units, num_outputs)
 
         self.hidden = self.init_hidden()
 
     def init_hidden(self):
-        return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))),
-                nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))))
+        return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))),
+                nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))))
 
-    def forward(self, x, h, c):
+    def forward(self, x):
         '''
         :param x: input of size (seq_len, batch, input_size)
         :param h: hidden state of previous cell or initial cell
@@ -38,7 +40,7 @@ class LSTM(nn.Module):
         :return char_out: character outputs from network
         '''
         # Use 1's because we want character level
-        x = self.emb(x.view(1, -1))
+        # x = self.emb(x.view(1, -1)) # 1 x Batch Size
         out, self.hidden = self.lstm(x.view(1, 1, -1), self.hidden)
         char_out = self.dense(out)
         return char_out
