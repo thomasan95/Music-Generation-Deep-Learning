@@ -126,7 +126,6 @@ def generate_music(model, char2int, int2char, file=args.generate_file):
         f.close()
 
 
-
 def main():
     with open(args.file, 'r') as f:
         inp = f.read()
