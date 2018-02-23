@@ -61,6 +61,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
         model = model.cuda()
         valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
     times = []
+
     for epoch_i in range(args.max_epochs):
         loss = 0
         # Slowly increase batch_size during training
@@ -108,6 +109,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
             if len(losses['valid']) > 3:
                 early_stop = utils.early_stop(losses['valid'])
                 if early_stop:
+                    print("Stopping due to Early Stop Criterion")
                     break
 
         if epoch_i == 0:
