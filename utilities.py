@@ -2,26 +2,11 @@ import torch
 import random
 
 
-# def char_to_int(text):
-#     '''
-#     :param text: pass in the entire text to get tokenized
-#     :param char2int: dictionary to add to
-#     :return: a dictionary to tokenize all ABC characters
-#     '''
-#
-#     assert isinstance(text, str)
-#
-#     chars = list(set(text))
-#     char2int = {}
-#     for i, c in enumerate(chars):
-#         char2int[c] = i
-#     return char2int
-
-
 def grab_data(split_pct, music_data):
     '''
     utility function to read in the data
     :param split_pct: amount of data to split into validation and test
+    :param music_data: The music file in ABC format in one continuous string
     :return: training and validation sets
     '''
     assert 0 <= split_pct <= 1.0
@@ -33,7 +18,10 @@ def grab_data(split_pct, music_data):
 
 
 def random_data_sample(data, batch_size):
-    '''
+    ''' Grabs a random chunk of data from the training set.
+    It will shift the target by one from the input values, so the network will be
+    able to train character by character
+
     :param data: entire data sequence to train on
     :param batch_size: batch_size
     :return: an input and target values returned for network
@@ -80,17 +68,14 @@ def get_accuracy(preds, labels):
 
 
 def early_stop(val_loss):
+    '''
+    Implement Early Stopping in the function
+    :param val_loss: list of validation losses
+    :return: bool of whether to early stop or not
+    '''
+    assert isinstance(val_loss, list)
+
     if val_loss[-1] > val_loss[-2] and val_loss[-2] > val_loss[-3]:
         return True
     else:
         return False
-def reverse_lookup_dict(dictionary):
-    '''
-    Create reverse lookup dictionary for converting prediction numbers to characters
-    :param dictionary: tokenizing dictionary
-    :return: reverse lookup dictionary
-    '''
-    lookup = {}
-    for a, b in dictionary.items():
-        lookup[b] = a
-    return lookup
