@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 import utilities as utils
 import numpy as np
-
+from timeit import default_timer as timer
 
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=20, help="Specify batch size for network")
@@ -31,6 +31,7 @@ args = parser.parse_args()
 
 gpu = torch.cuda.is_available()
 
+
 def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int):
     if gpu:
         batch_size = batch_size*50
@@ -47,10 +48,11 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     if gpu:
         model = model.cuda()
         valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
-
+    times = []
     for epoch_i in range(args.max_epochs):
         loss = 0
         # Slowly increase batch_size during training
+
         if epoch_i % 2000 == 0 and epoch_i > 0:
             if gpu:
                 batch_size = batch_size + 100
@@ -69,12 +71,14 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
         # Initialize model state
         model.hidden = model.init_hidden()
-
+        start = timer()
         for index in range(len(batch_x)):
             model.zero_grad()
             output = model(batch_x[index])
             loss += criterion(torch.squeeze(output, dim=1), batch_y[index])
+        delta_time = timer() - start
 
+        times.append(delta_time)
         curr_loss = loss.data[0]
         loss.backward()
         optimizer.step()
@@ -98,8 +102,10 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
             min_loss = losses['train'][-1]
 
         if epoch_i % 100 == 0:
-            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f" %
-                  (epoch_i, curr_loss, avg_val_loss))
+            times = np.asarray(times)
+            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Becn:%f" %
+                  (epoch_i, curr_loss, avg_val_loss, np.mean(times).astype(float)))
+            times =  []
 
         if epoch_i % args.update_check == 0 and epoch_i > 0:
             update_loss = np.mean(losses['train'][-args.update_check:])
