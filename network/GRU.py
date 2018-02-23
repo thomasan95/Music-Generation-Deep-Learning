@@ -18,8 +18,6 @@ class GRU(nn.Module):
         self.batch_size = batch_size
 
         # Create GRU network
-        # self.emb = nn.Embedding(batch_size, hidden_units)
-
         self.gru = nn.GRU(input_size=batch_size,
                           hidden_size=hidden_units,
                           num_layers=num_layers,
@@ -34,7 +32,7 @@ class GRU(nn.Module):
         Initializes the hidden state weight matrix of the GRU network
         :return: Initialized weight matrix
         '''
-        return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))))
+        return nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)))
 
     def forward(self, x):
         '''

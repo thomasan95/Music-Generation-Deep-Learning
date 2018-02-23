@@ -18,10 +18,11 @@ parser.add_argument("-t", "--training", type=bool, default=True, help="Specify b
 parser.add_argument("-r", "--resume", type=bool, default=False, help="Specify boolean whether to load a saved network")
 parser.add_argument("-d", "--dropout", type=float, default=0, help="Specify amount of dropout after each layer in LSTM")
 parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify whether use GRU or LSTM")
+parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How often to check save model")
 args = parser.parse_args()
 
 
-def train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int, int2char, update_check=5000,):
+def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int, int2char):
     gpu = torch.cuda.is_available()
     losses = {'train': [], 'valid': []}
     min_loss = 0
@@ -34,7 +35,7 @@ def train(model, train_data, valid_data, batch_size, max_epochs, criterion, opti
     valid_x, valid_y = utils.string_to_tensor(valid_x, char2int), utils.string_to_tensor(valid_y, char2int, labels=True)
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
-    for epoch_i in range(max_epochs):
+    for epoch_i in range(args.max_epochs):
         loss = 0
         # Slowly increase batch_size during training
         if epoch_i % 2000 == 0 and epoch_i > 0:
@@ -82,8 +83,8 @@ def train(model, train_data, valid_data, batch_size, max_epochs, criterion, opti
             print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f" %
                   (epoch_i, curr_loss, avg_val_loss))
 
-        if epoch_i % update_check == 0 and epoch_i > 0:
-            update_loss = np.mean(losses['train'][-update_check:])
+        if epoch_i % args.update_check == 0 and epoch_i > 0:
+            update_loss = np.mean(losses['train'][-args.update_check:])
             if update_loss < min_loss:
                 print("New Best Model! Saving!")
                 min_loss = update_loss
@@ -97,8 +98,7 @@ def generate_music(model):
     pass # To Do
 
 
-def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training, resume):
-
+def main():
     with open('./data/input.txt', 'r') as f:
         inp = f.read()
         # Create tokenizing dictionary for text in ABC notation
@@ -106,7 +106,7 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
         # Create reverse lookup dictionary for the text
         int2char = {v: k for k, v in char2int.items()}
 
-        train_data, valid_data = utils.grab_data(split_pct, inp)
+        train_data, valid_data = utils.grab_data(args.split_pct, inp)
 
     # Number of total unique characters
     num_outputs = len(char2int)
@@ -114,23 +114,23 @@ def main(batch_size, max_epochs, num_units, num_layers, lr, split_pct, training,
     # Initialize recurrent network
     if args.network == 'GRU':
         print("Using GRU Network")
-        model = GRU.GRU(1, num_units, num_layers, num_outputs, args.dropout)
+        model = GRU.GRU(1, args.num_units, args.num_layers, num_outputs, args.dropout)
     else:
         print("Using LSTM Network")
-        model = LSTM.LSTM(1, num_units, num_layers, num_outputs, args.dropout)
+        model = LSTM.LSTM(1, args.num_units, args.num_layers, num_outputs, args.dropout)
 
     # Initialize Loss function for network
     criterion = torch.nn.CrossEntropyLoss()
 
     # Initialize optimizer for network
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
-    # if training:
-    model, losses = train(model, train_data, valid_data, batch_size, max_epochs, criterion, optimizer, resume, char2int, int2char)
-    # else:
-    #     model, optimizer, epoch = utils.resume(model, criterion, optimizer)
-    #     generate_music(model)
+    if args.training:
+        model, losses = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int, int2char)
+    else:
+        model, optimizer, epoch = utils.resume(model, criterion, optimizer)
+        generate_music(model)
+
 
 if __name__=="__main__":
-    main(args.batch_size, args.max_epochs, args.num_units, args.num_layers,
-         args.learning_rate, args.split_pct, args.training, args.resume)
+    main()
