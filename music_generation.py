@@ -206,7 +206,7 @@ def main():
     if args.training == 'true':
         _, _ = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int)
     else:
-        model = utils.resume(model, file=args.resume_file)
+        model = utils.resume(model, filepath=args.resume_file)
         generate_music(model, char2int, int2char)
 
 
