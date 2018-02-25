@@ -23,11 +23,11 @@ parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify w
 parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How often to check save model")
 parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="Input file to train on")
 parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt', help="Path to save generated file")
-parser.add_argument("-gc", "--generate_length", type=int, default=100000, help="How many characters to generate")
-parser.add_argument("-temp", "--temperature", type=float, default=1, help="Temperature for network")
+parser.add_argument("-gc", "--generate_length", type=int, default=5000, help="How many characters to generate")
+parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
 parser.add_argument("--save_append", type=str, default="", help="What to append to save path to make it unique")
 parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
-parser.add_argument("-s", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
+parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
 
 args = parser.parse_args()
 
@@ -182,7 +182,7 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
         for c_idx in range(args.generate_length):
             out = model(inp)
             # Normalize distribution by temperature and turn into a vector
-            out = out.data.view(-1).exp()
+            out = out.data.view(-1).div(args.temperature).exp()
             out = out.div(out.sum())
             # Sample num_samples from multinomial distribution
             next_input = torch.multinomial(out, num_samples)[0]
