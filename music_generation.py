@@ -39,13 +39,21 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     loaded and resumed either for training or for music generation in the future
 
     :param model: Recurrent network model to be passed in
+    :type model: PyTorch model
     :param train_data: type str, data to be passed in to be considered as part of training
+    :type train_data: str
     :param valid_data: type str, data to be passed in to be considered as part of validation
+    :type valid_data: str
     :param batch_size: initial batch size to start with for training
+    :type batch_size: int
     :param criterion: Loss function to be used (CrossEntropyLoss)
+    :type criterion: PyTorch Loss
     :param optimizer: PyTorch optimizer to user in the training process (Adam or SGD or RMSProp)
+    :type optimizer: PyTorch Optimizer
     :param char2int: type dict, Dictionary to tokenize the batches
+    :type char2int: dict
     :return: The trained model and the corresponding losses
+    :rtype: PyTorch Model, dict
     '''
 
     if gpu:
@@ -142,16 +150,16 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
     Generate music will be called when args.training is set to 'false'. In that case, the function will generate
     a certain amount of characters specified by args.generate_length.
 
-    :param model: PyTorch Model
-                    Loaded model from main() to be passed into network
-    :param char2int: Dict{str: int}
-                    Dictionary to convert characters to integers
-    :param int2char: Dict{int, str}
-                    type dict, Dictionary to convert integers to characters
-    :param file: str
-                    File path to save the generated music to
-    :param num_samples: Int
-                    Number of samples to draw
+    :param model: Loaded model from main() to be passed into network
+    :type model: PyTorch Model
+    :param char2int: Dictionary to convert characters to integers
+    :type char2int: dict
+    :param int2char: type dict, Dictionary to convert integers to characters
+    :type int2char: dict
+    :param file: File path to save the generated music to
+    :type file: str
+    :param num_samples:  Number of samples to draw
+    :type num_samples: int
     '''
     if gpu:
         model = model.cuda()
