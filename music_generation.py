@@ -58,9 +58,6 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     :rtype: PyTorch Model, dict
     '''
 
-    if gpu:
-        seq_len = seq_len*10
-        print("GPU BATCH")
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
     min_loss = 0
