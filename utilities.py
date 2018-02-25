@@ -103,10 +103,6 @@ def resume(model, filepath='./saves/checkpoint.pth.tar'):
     return model
 
 
-def get_accuracy(preds, labels):
-    pass
-
-
 def early_stop(val_loss):
     '''
     Implement Early Stopping in the function
@@ -118,7 +114,7 @@ def early_stop(val_loss):
     '''
     assert isinstance(val_loss, list)
 
-    if val_loss[-1] > val_loss[-2] > val_loss[-3]:
+    if val_loss[-1] > val_loss[-2] > val_loss[-3] > val_loss[-4]:
         return True
     else:
         return False
