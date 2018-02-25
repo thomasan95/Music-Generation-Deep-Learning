@@ -24,13 +24,15 @@ def grab_data(split_pct, music_data):
     return music_data[:split_idx], music_data[split_idx:]
 
 
-def random_data_sample(data, batch_size):
+def random_data_sample(data, seq_len, batch_size):
     ''' Grabs a random chunk of data from the training set.
     It will shift the target by one from the input values, so the network will be
     able to train character by character
 
     :param data: entire data sequence to train on
     :type data: str
+    :param seq_len: how long of sequence to sample
+    :type seq_len: int
     :param batch_size: batch_size
     :type batch_size: int
     :return: an input and target values returned for network
@@ -42,10 +44,18 @@ def random_data_sample(data, batch_size):
     assert batch_size > 0
 
     n = len(data)
-    random_idx = random.randint(0, n - batch_size - 1)
-    x = data[random_idx:random_idx + batch_size]
-    y = data[random_idx + 1:random_idx + batch_size + 1]
-    return x, y
+    if batch_size == 1:
+        random_idx = random.randint(0, n - seq_len - 1)
+        x = data[random_idx:random_idx + seq_len]
+        y = data[random_idx + 1:random_idx + seq_len + 1]
+        return x, y
+    else:
+        x, y = [], []
+        for b in range(batch_size):
+            random_idx = random.randint(0, n - seq_len - 1)
+            x.append(data[random_idx:random_idx + seq_len])
+            y.append(data[random_idx + 1:random_idx + seq_len + 1])
+        return x, y
 
 
 def string_to_tensor(string, dictionary, labels=False):
@@ -101,7 +111,6 @@ def resume(model, filepath='./saves/checkpoint.pth.tar'):
     :return: saved PyTorch model
     :rtype: PyTorch model
     '''
-    assert isinstance(model, torch.nn.modules.rnn.LSTM) or isinstance(model, torch.nn.modules.rnn.GRU)
     assert isinstance(filepath, str)
 
     f = torch.load(filepath)
