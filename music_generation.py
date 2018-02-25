@@ -8,7 +8,8 @@ import numpy as np
 from timeit import default_timer as timer
 
 parser = argparse.ArgumentParser(description="Specify parameters for network")
-parser.add_argument("-bz", "--batch_size", type=int, default=25, help="Specify batch size for network")
+parser.add_argument("-bz", "--batch_size", type=int, default=1, help="Specify batch size for network")
+parser.add_argument("-sl", "--seq_len", type=int, default=25, help="Initial sequence length to train on")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
 parser.add_argument("-e", "--max_epochs", type=int, default=1000000, help="Specify number of epochs to train network")
 parser.add_argument("-thresh", "--threshold", type=float, default=3, help="Threshold for when to increase batch_size")
@@ -34,7 +35,7 @@ args = parser.parse_args()
 gpu = torch.cuda.is_available()
 
 
-def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2int):
+def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int):
     '''
     Function trains the model. It will save the current model every update_check iterations so model can then be
     loaded and resumed either for training or for music generation in the future
@@ -45,8 +46,8 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     :type train_data: str
     :param valid_data: type str, data to be passed in to be considered as part of validation
     :type valid_data: str
-    :param batch_size: initial batch size to start with for training
-    :type batch_size: int
+    :param seq_len: initial seq_len to start with for training
+    :type seq_len: int
     :param criterion: Loss function to be used (CrossEntropyLoss)
     :type criterion: PyTorch Loss
     :param optimizer: PyTorch optimizer to user in the training process (Adam or SGD or RMSProp)
@@ -58,7 +59,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     '''
 
     if gpu:
-        batch_size = batch_size*10
+        seq_len = seq_len*10
         print("GPU BATCH")
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
@@ -76,18 +77,18 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
     for epoch_i in range(1, args.max_epochs+1):
         loss = 0
-        # Slowly increase batch_size during training
+        # Slowly increase seq_len during training
 
         if epoch_i % 100 == 0:
             if np.mean(losses['train'][-100:]) < args.threshold:
                 if gpu:
-                    batch_size = batch_size + 50
+                    seq_len = seq_len + 50
                 else:
-                    batch_size = batch_size + 5
-                print("Batch size changed to: " + str(batch_size))
+                    seq_len = seq_len + 5
+                print("Sequence Length changed to: " + str(seq_len))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
-        batch_x, batch_y = utils.random_data_sample(train_data, batch_size)
+        batch_x, batch_y = utils.random_data_sample(train_data, seq_len)
         batch_x = utils.string_to_tensor(batch_x, char2int)
         batch_y = utils.string_to_tensor(batch_y, char2int, labels=True)
         batch_x, batch_y = Variable(batch_x), Variable(batch_y)
@@ -211,10 +212,10 @@ def main():
     # Initialize recurrent network
     if args.network == 'GRU':
         print("Using GRU Network")
-        model = GRU.GRU(1, args.num_units, args.num_layers, num_outputs, args.dropout)
+        model = GRU.GRU(args.batch_size, args.num_units, args.num_layers, num_outputs, args.dropout)
     else:
         print("Using LSTM Network")
-        model = LSTM.LSTM(1, args.num_units, args.num_layers, num_outputs, args.dropout)
+        model = LSTM.LSTM(args.batch_size, args.num_units, args.num_layers, num_outputs, args.dropout)
 
     # Initialize Loss function for network
     criterion = torch.nn.CrossEntropyLoss()
@@ -223,7 +224,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
     if args.training == 'true':
-        _, _ = train(model, train_data, valid_data, args.batch_size, criterion, optimizer, char2int)
+        _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
         model = utils.resume(model, filepath=args.resume_file)
         generate_music(model, char2int, int2char)
