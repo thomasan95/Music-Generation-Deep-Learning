@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=25, help="Specify batch size for network")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
 parser.add_argument("-e", "--max_epochs", type=int, default=1000000, help="Specify number of epochs to train network")
+parser.add_argument("-thresh", "--threshold", type=float, default=3, help="Threshold for when to increase batch_size")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="Specify learning rate of the network")
 parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify number of layers for network")
 parser.add_argument("-s", "--split_pct", type=float, default=0.8,
@@ -78,7 +79,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
         # Slowly increase batch_size during training
 
         if epoch_i % 100 == 0:
-            if np.mean(losses['train'][-100:]) < 3:
+            if np.mean(losses['train'][-100:]) < args.threshold:
                 if gpu:
                     batch_size = batch_size + 50
                 else:
@@ -118,7 +119,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
             avg_val_loss = valid_loss.data[0]/len(valid_x)
             losses['valid'].append(avg_val_loss)
-            if len(losses['valid']) > 3 and args.early_stop == 'true':
+            if len(losses['valid']) > 4 and args.early_stop == 'true':
                 early_stop = utils.early_stop(losses['valid'])
                 if early_stop:
                     print("Stopping due to Early Stop Criterion")
