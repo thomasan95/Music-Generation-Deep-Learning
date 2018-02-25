@@ -8,9 +8,9 @@ import numpy as np
 from timeit import default_timer as timer
 
 parser = argparse.ArgumentParser(description="Specify parameters for network")
-parser.add_argument("-bz", "--batch_size", type=int, default=20, help="Specify batch size for network")
+parser.add_argument("-bz", "--batch_size", type=int, default=25, help="Specify batch size for network")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
-parser.add_argument("-e", "--max_epochs", type=int, default=100000, help="Specify number of epochs to train network")
+parser.add_argument("-e", "--max_epochs", type=int, default=1000000, help="Specify number of epochs to train network")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="Specify learning rate of the network")
 parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify number of layers for network")
 parser.add_argument("-s", "--split_pct", type=float, default=0.8,
@@ -26,6 +26,7 @@ parser.add_argument("-gc", "--generate_length", type=int, default=100000, help="
 parser.add_argument("-temp", "--temperature", type=float, default=1, help="Temperature for network")
 parser.add_argument("--save_append", type=str, default="", help="What to append to save path to make it unique")
 parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
+parser.add_argument("-s", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
 
 args = parser.parse_args()
 
@@ -36,6 +37,7 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     '''
     Function trains the model. It will save the current model every update_check iterations so model can then be
     loaded and resumed either for training or for music generation in the future
+
     :param model: Recurrent network model to be passed in
     :param train_data: type str, data to be passed in to be considered as part of training
     :param valid_data: type str, data to be passed in to be considered as part of validation
@@ -43,8 +45,9 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
     :param criterion: Loss function to be used (CrossEntropyLoss)
     :param optimizer: PyTorch optimizer to user in the training process (Adam or SGD or RMSProp)
     :param char2int: type dict, Dictionary to tokenize the batches
-    :return:
+    :return: The trained model and the corresponding losses
     '''
+
     if gpu:
         batch_size = batch_size*10
         print("GPU BATCH")
@@ -62,16 +65,17 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
         valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
     times = []
 
-    for epoch_i in range(args.max_epochs):
+    for epoch_i in range(1, args.max_epochs+1):
         loss = 0
         # Slowly increase batch_size during training
 
-        if epoch_i % 2000 == 0 and epoch_i > 0:
-            if gpu:
-                batch_size = batch_size + 50
-            else:
-                batch_size = batch_size + 5
-            print("Batch size changed to: " + str(batch_size))
+        if epoch_i % 100 == 0:
+            if np.mean(losses['train'][-100:]) < 3:
+                if gpu:
+                    batch_size = batch_size + 50
+                else:
+                    batch_size = batch_size + 5
+                print("Batch size changed to: " + str(batch_size))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, batch_size)
@@ -106,13 +110,13 @@ def train(model, train_data, valid_data, batch_size, criterion, optimizer, char2
 
             avg_val_loss = valid_loss.data[0]/len(valid_x)
             losses['valid'].append(avg_val_loss)
-            if len(losses['valid']) > 3:
+            if len(losses['valid']) > 3 and args.early_stop == 'true':
                 early_stop = utils.early_stop(losses['valid'])
                 if early_stop:
                     print("Stopping due to Early Stop Criterion")
                     break
 
-        if epoch_i == 0:
+        if epoch_i == 1:
             min_loss = losses['train'][-1]
 
         if epoch_i % 100 == 0 and epoch_i > 0:
@@ -137,11 +141,17 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
     '''
     Generate music will be called when args.training is set to 'false'. In that case, the function will generate
     a certain amount of characters specified by args.generate_length.
-    :param model: Loaded model from main() to be passed into network
-    :param char2int: type dict, Dictionary to convert characters to integers
-    :param int2char: type dict, Dictionary to convert integers to characters
-    :param file: type str, File path to save the generated music to
-    :param num_samples:
+
+    :param model: PyTorch Model
+                    Loaded model from main() to be passed into network
+    :param char2int: Dict{str: int}
+                    Dictionary to convert characters to integers
+    :param int2char: Dict{int, str}
+                    type dict, Dictionary to convert integers to characters
+    :param file: str
+                    File path to save the generated music to
+    :param num_samples: Int
+                    Number of samples to draw
     '''
     if gpu:
         model = model.cuda()
