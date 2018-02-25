@@ -5,6 +5,7 @@ import random
 def grab_data(split_pct, music_data):
 
     ''' Utility function to read in the data
+
     :param split_pct: amount of data to split into validation and test
     :type split_pct: float
     :param music_data: The music file in ABC format in one continuous string
@@ -45,12 +46,19 @@ def random_data_sample(data, batch_size):
 
 def string_to_tensor(string, dictionary, labels=False):
     '''
+    Changes the string into tokenized tensor string
+
     :param string: batch string that we would convert to tensor
+    :type string: str
     :param dictionary: char2int dictionary to tokenize the string
+    :type dictionary: dict
     :return: tensor of tokenized string
+    :rtype: torch tensor
     '''
+
     assert isinstance(string, str)
     assert isinstance(dictionary, dict)
+
     if labels:
         tensor = torch.zeros(len(string)).long()
     else:
@@ -61,6 +69,16 @@ def string_to_tensor(string, dictionary, labels=False):
 
 
 def checkpoint(state, file_name='./saves/checkpoint.pth.tar'):
+    '''
+    Save the PyTorch model
+
+    :param state: Contains everything to be stored
+    :type state: dict
+    :param file_name: path where to save the file
+    :type file_name: str
+    '''
+    assert isinstance(file_name, str)
+
     torch.save(state, file_name)
 
 
@@ -75,6 +93,8 @@ def resume(model, filepath='./saves/checkpoint.pth.tar'):
     :return: saved PyTorch model
     :rtype: PyTorch model
     '''
+
+    assert isinstance(filepath, str)
 
     f = torch.load(filepath)
     # epoch = f['epoch']
