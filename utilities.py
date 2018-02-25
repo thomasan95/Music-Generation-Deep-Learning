@@ -6,7 +6,9 @@ def grab_data(split_pct, music_data):
 
     ''' Utility function to read in the data
     :param split_pct: amount of data to split into validation and test
+    :type split_pct: float
     :param music_data: The music file in ABC format in one continuous string
+    :type music_data: str
     :return: training and validation sets
     '''
 
@@ -24,10 +26,15 @@ def random_data_sample(data, batch_size):
     able to train character by character
 
     :param data: entire data sequence to train on
+    :type data: str
     :param batch_size: batch_size
+    :type batch_size: int
     :return: an input and target values returned for network
+    :rtype: str, str
     '''
     assert isinstance(batch_size, int)
+    assert isinstance(data, str)
+    assert batch_size > 0
 
     n = len(data)
     random_idx = random.randint(0, n - batch_size - 1)
@@ -58,11 +65,23 @@ def checkpoint(state, file_name='./saves/checkpoint.pth.tar'):
 
 
 def resume(model, filepath='./saves/checkpoint.pth.tar'):
+    '''
+    Loads the the saved PyTorch model at the specified location
+
+    :param model: Initialized model
+    :type model: PyTorch model
+    :param filepath: location of where model is saved
+    :type filepath: str
+    :return: saved PyTorch model
+    :rtype: PyTorch model
+    '''
+
     f = torch.load(filepath)
     # epoch = f['epoch']
     model.load_state_dict(f['state_dict'])
     # optimizer.load_state_dict(f['optimizer'])
     return model
+
 
 def get_accuracy(preds, labels):
     pass
@@ -71,12 +90,15 @@ def get_accuracy(preds, labels):
 def early_stop(val_loss):
     '''
     Implement Early Stopping in the function
-    :param val_loss: list of validation losses
+
+    :param val_loss: List of validation losses
+    :type val_loss: list
     :return: bool of whether to early stop or not
+    :rtype: bool
     '''
     assert isinstance(val_loss, list)
 
-    if val_loss[-1] > val_loss[-2] and val_loss[-2] > val_loss[-3]:
+    if val_loss[-1] > val_loss[-2] > val_loss[-3]:
         return True
     else:
         return False
