@@ -16,8 +16,13 @@ def grab_data(split_pct, music_data):
     assert 0 <= split_pct <= 1.0
     assert isinstance(split_pct, float)
 
-    n = len(music_data)
-    split_idx = int(n*0.8)
+#    n = len(music_data)
+#    split_idx = int(n*0.8)
+    
+    num_files = music_data.count('<start>')
+    split_idx = 0
+    for f in range(int(num_files*0.8)):
+        split_idx = music_data.find('<start>',split_idx)
     return music_data[:split_idx], music_data[split_idx:]
 
 
