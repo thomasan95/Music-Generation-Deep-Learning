@@ -15,6 +15,7 @@ def grab_data(split_pct, music_data):
 
     assert 0 <= split_pct <= 1.0
     assert isinstance(split_pct, float)
+    assert isinstance(music_data, str)
     
     num_files = music_data.count('<start>')
     num_split = int(num_files*split_pct)
@@ -35,6 +36,7 @@ def random_data_sample(data, batch_size):
     :return: an input and target values returned for network
     :rtype: str, str
     '''
+
     assert isinstance(batch_size, int)
     assert isinstance(data, str)
     assert batch_size > 0
@@ -54,8 +56,10 @@ def string_to_tensor(string, dictionary, labels=False):
     :type string: str
     :param dictionary: char2int dictionary to tokenize the string
     :type dictionary: dict
+    :param labels: specifies whether string passed in is our target or train
+    :type labels: bool
     :return: tensor of tokenized string
-    :rtype: torch tensor
+    :rtype: torch.FloatTensor, torch.LongTensor
     '''
 
     assert isinstance(string, str)
@@ -79,6 +83,8 @@ def checkpoint(state, file_name='./saves/checkpoint.pth.tar'):
     :param file_name: path where to save the file
     :type file_name: str
     '''
+
+    assert isinstance(state, dict)
     assert isinstance(file_name, str)
 
     torch.save(state, file_name)
@@ -95,7 +101,7 @@ def resume(model, filepath='./saves/checkpoint.pth.tar'):
     :return: saved PyTorch model
     :rtype: PyTorch model
     '''
-
+    assert isinstance(model, torch.nn.modules.rnn.LSTM) or isinstance(model, torch.nn.modules.rnn.GRU)
     assert isinstance(filepath, str)
 
     f = torch.load(filepath)
