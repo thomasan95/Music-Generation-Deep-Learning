@@ -277,19 +277,19 @@ def main():
     criterion = torch.nn.CrossEntropyLoss()
 
     # Initialize optimizer for network   
-#    if args.optim == 'Adagrad':
-#        optimizer = optim.Adagrad(model.parameters(), lr=args.learning_rate)
-#    elif args.optim == "RMS":
-#        optimizer = optim.RMSprop(model.parameters(), lr=args.learning_rate)
-#    else:
-#        optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-#
-#    if args.training == 'true':
-#        _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
-#    else:
-#        model = utils.resume(model, filepath=args.resume_file)
-#        generate_music(model, char2int, int2char)
-    hmap = heat_map(model,char2int,int2char)  
+    if args.optim == 'Adagrad':
+        optimizer = optim.Adagrad(model.parameters(), lr=args.learning_rate)
+    elif args.optim == "RMS":
+        optimizer = optim.RMSprop(model.parameters(), lr=args.learning_rate)
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+
+    if args.training == 'true':
+        _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
+    else:
+        model = utils.resume(model, filepath=args.resume_file)
+        generate_music(model, char2int, int2char)
+#    hmap = heat_map(model,char2int,int2char)  
 
 if __name__ == "__main__":
     main()
