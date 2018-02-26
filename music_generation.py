@@ -135,7 +135,8 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
             if losses['valid'][-1] <= min(losses['valid']):
                 print("New Best Model! Saving!")
                 utils.checkpoint({'epoch': epoch_i, 
-                                  'losses':losses,
+                                  'losses': losses, 
+                                  'seq_len': seq_len,
                                   'state_dict': model.state_dict(),
                                   'optimizer': optimizer.state_dict()},
                                  './saves/checkpoint-' + str(args.network) + '-' + str(args.save_append) + '.pth.tar')

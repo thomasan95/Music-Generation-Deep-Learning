@@ -123,6 +123,9 @@ def resume(model, filepath='./saves/checkpoint.pth.tar'):
     f = torch.load(filepath)
     epoch = f['epoch']
     losses = f['losses']
+    seq_len = f['seq_len']
+    print(epoch)
+    print(seq_len)
     model.load_state_dict(f['state_dict'])
     # optimizer.load_state_dict(f['optimizer'])
     return model
