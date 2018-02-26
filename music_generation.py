@@ -12,7 +12,7 @@ parser.add_argument("-bz", "--batch_size", type=int, default=1, help="Specify ba
 parser.add_argument("-sl", "--seq_len", type=int, default=5, help="Initial sequence length to train on")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
 parser.add_argument("-e", "--max_epochs", type=int, default=1000000, help="Specify number of epochs to train network")
-parser.add_argument("-thresh", "--threshold", type=float, default=3, help="Threshold for when to increase batch_size")
+parser.add_argument("-thresh", "--threshold", type=float, default=2.5, help="Threshold for when to increase batch_size")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="Specify learning rate of the network")
 parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify number of layers for network")
 parser.add_argument("-s", "--split_pct", type=float, default=0.8,
@@ -74,15 +74,18 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         model = model.cuda()
         valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
     times = []
+    temp_loss = []
 
     for epoch_i in range(1, args.max_epochs + 1):
         loss = 0
-        # Slowly increase seq_len during training
 
-        if epoch_i % 1000 == 0:
-            if seq_len < args.max_seq_len:
-                seq_len += 5
-                print("\nIncreasing sequence length to: " + str(seq_len))
+        # Slowly increase seq_len during training
+        # if epoch_i > 100 and epoch_i % 100 == 0:
+
+        # if epoch_i % 1000 == 0:
+        #     if seq_len < args.max_seq_len:
+        #         seq_len += 5
+        #         print("\nIncreasing sequence length to: " + str(seq_len))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, seq_len, args.batch_size)
@@ -108,7 +111,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         loss.backward()
         optimizer.step()
         curr_loss = curr_loss/len(batch_x)
-        losses['train'].append(curr_loss)
+        temp_loss.append(curr_loss)
 
         if epoch_i % args.update_check == 0 and epoch_i > 0:
             valid_loss = 0
@@ -136,6 +139,13 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
 
         if epoch_i % 100 == 0 and epoch_i > 0:
             times = np.asarray(times)
+
+            losses['train'].append(sum(temp_loss)/len(temp_loss))
+            temp_loss = []
+
+            if losses['train'][-1] < args.threshold:
+                seq_len += 2
+
             print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Batch:%f" %
                   (epoch_i, curr_loss, avg_val_loss, np.mean(times).astype(float)))
             times = []
