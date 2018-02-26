@@ -85,11 +85,13 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                 print("Sequence Length changed to: " + str(seq_len))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
-        batch_x, batch_y = utils.random_data_sample(train_data, seq_len)
+        batch_x, batch_y = utils.random_data_sample(train_data, seq_len,args.batch_size)
         batch_x = utils.string_to_tensor(batch_x, char2int)
         batch_y = utils.string_to_tensor(batch_y, char2int, labels=True)
         batch_x, batch_y = Variable(batch_x), Variable(batch_y)
-
+        trainLoss = []
+        validationLoss = []
+        lossEpoch = np.zeros(2)
         if gpu:
             batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
@@ -116,6 +118,10 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                 valid_loss += criterion(torch.squeeze(valid_out, dim=1), valid_y[i])
 
             avg_val_loss = valid_loss.data[0]/len(valid_x)
+            lossEpoch[:]=avg_val_loss,epoch_i
+            validationLoss.append(lossEpoch)
+            np.save('saves/validLoss.npy',np.asarray(validationLoss))
+            
             losses['valid'].append(avg_val_loss)
             if len(losses['valid']) > 4 and args.early_stop == 'true':
                 early_stop = utils.early_stop(losses['valid'])
@@ -131,7 +137,9 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
             print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Batch:%f" %
                   (epoch_i, curr_loss, avg_val_loss, np.mean(times).astype(float)))
             times =  []
-
+            lossEpoch[:]=curr_loss,epoch_i
+            trainLoss.append(lossEpoch)
+            np.save('saves/trainLoss.npy',np.asarray(trainLoss))
         if epoch_i % args.update_check == 0 and epoch_i > 0:
             update_loss = np.mean(losses['train'][-args.update_check:])
             if update_loss < min_loss:
