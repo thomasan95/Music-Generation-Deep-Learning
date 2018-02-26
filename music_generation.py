@@ -10,10 +10,10 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=1, help="Specify batch size for network")
-parser.add_argument("-sl", "--seq_len", type=int, default=25, help="Initial sequence length to train on")
+parser.add_argument("-sl", "--seq_len", type=int, default=5, help="Initial sequence length to train on")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
 parser.add_argument("-e", "--max_epochs", type=int, default=1000000, help="Specify number of epochs to train network")
-parser.add_argument("-thresh", "--threshold", type=float, default=3, help="Threshold for when to increase batch_size")
+parser.add_argument("-thresh", "--threshold", type=float, default=2.5, help="Threshold for when to increase batch_size")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, help="Specify learning rate of the network")
 parser.add_argument("-l", "--num_layers", type=int, default=1, help="Specify number of layers for network")
 parser.add_argument("-s", "--split_pct", type=float, default=0.8,
@@ -22,19 +22,22 @@ parser.add_argument("-t", "--training", type=str, default='true',
                     help="Specify boolean whether network is to train or to generate")
 parser.add_argument("-d", "--dropout", type=float, default=0, help="Specify amount of dropout after each layer in LSTM")
 parser.add_argument("-n", "--network", type=str, default='LSTM', help="Specify whether use GRU or LSTM")
-parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How often to check save model")
+parser.add_argument("-uc", "--update_check", type=int, default=1000, help="How often to check save model")
 parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="Input file to train on")
-parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt', help="Path to save generated file")
+parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt',
+                    help="Path to save generated file")
 parser.add_argument("-gc", "--generate_length", type=int, default=5000, help="How many characters to generate")
-parser.add_argument("-temp", "--temperature", type=float, default=0.4, help="Temperature for network")
+parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
 parser.add_argument("--save_append", type=str, default="", help="What to append to save path to make it unique")
-parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint-LSTM-.pth.tar', help="Path to file to load")
+parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
-parser.add_argument("-hm", "--heatmap", type=str, default='true', help="Specify whether you want to generate a heat map")
+parser.add_argument("-ms", "--max_seq_len", type=int, default=700, help="max length of input to batch")
 
 args = parser.parse_args()
 
 gpu = torch.cuda.is_available()
+if gpu:
+    print("\nRunning on GPU\n")
 
 
 def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int):
@@ -44,10 +47,10 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
 
     :param model: Recurrent network model to be passed in
     :type model: PyTorch model
-    :param train_data: type str, data to be passed in to be considered as part of training
-    :type train_data: str
-    :param valid_data: type str, data to be passed in to be considered as part of validation
-    :type valid_data: str
+    :param train_data: data to be passed in to be considered as part of training
+    :type train_data: list
+    :param valid_data: data to be passed in to be considered as part of validation
+    :type valid_data: list
     :param seq_len: initial seq_len to start with for training
     :type seq_len: int
     :param criterion: Loss function to be used (CrossEntropyLoss)
@@ -62,10 +65,10 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
 
     losses = {'train': [], 'valid': []}
     avg_val_loss = 0
-    min_loss = 0
-
-    valid_x, valid_y = valid_data[:-1], valid_data[1:]
-    valid_x, valid_y = utils.string_to_tensor(valid_x, char2int), utils.string_to_tensor(valid_y, char2int, labels=True)
+    val_seq_len = len(valid_data) - 1
+    valid_x, valid_y = [valid_data[:-1]] * args.batch_size, [valid_data[1:]] * args.batch_size
+    valid_x = utils.string_to_tensor(valid_x, char2int, args.batch_size, val_seq_len)
+    valid_y = utils.string_to_tensor(valid_y, char2int, args.batch_size, val_seq_len, labels=True)
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
     # If GPU is available, change network to run on GPU
@@ -73,27 +76,25 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         model = model.cuda()
         valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
     times = []
-    
-    for epoch_i in range(1, args.max_epochs+1):
-        loss = 0
-        # Slowly increase seq_len during training
+    temp_loss = []
 
-        if epoch_i % 100 == 0:
-            if np.mean(losses['train'][-100:]) < args.threshold:
-                if gpu:
-                    seq_len = seq_len + 50
-                else:
-                    seq_len = seq_len + 5
-                print("Sequence Length changed to: " + str(seq_len))
+    for epoch_i in range(1, args.max_epochs + 1):
+        loss = 0
+
+        # Slowly increase seq_len during training
+        # if epoch_i > 100 and epoch_i % 100 == 0:
+
+        if epoch_i % 1000 == 0:
+            if seq_len < args.max_seq_len:
+                seq_len += 5
+                print("\nIncreasing sequence length to: " + str(seq_len))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
-        batch_x, batch_y = utils.random_data_sample(train_data, seq_len,args.batch_size)
-        batch_x = utils.string_to_tensor(batch_x, char2int)
-        batch_y = utils.string_to_tensor(batch_y, char2int, labels=True)
+        batch_x, batch_y = utils.random_data_sample(train_data, seq_len, args.batch_size)
+        batch_x = utils.string_to_tensor(batch_x, char2int, args.batch_size, seq_len)
+        batch_y = utils.string_to_tensor(batch_y, char2int, args.batch_size, seq_len, labels=True)
         batch_x, batch_y = Variable(batch_x), Variable(batch_y)
-        trainLoss = []
-        validationLoss = []
-        lossEpoch = np.zeros(2)
+
         if gpu:
             batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
@@ -102,59 +103,55 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         start = timer()
         for index in range(len(batch_x)):
             model.zero_grad()
-            output = model(batch_x[index])
-            hidden = model.hidden
-            
-            
-            loss += criterion(torch.squeeze(output, dim=1), batch_y[index])
-        
+            output = model(batch_x[index, :, 0])
+            loss += criterion(torch.squeeze(output, dim=0), batch_y[index, :, 0])
+
         delta_time = timer() - start
 
         times.append(delta_time)
         curr_loss = loss.data[0]
         loss.backward()
         optimizer.step()
-        curr_loss = curr_loss/len(batch_x)
-        losses['train'].append(curr_loss)
+        curr_loss = curr_loss / len(batch_x)
+        temp_loss.append(curr_loss)
 
-        if epoch_i % 1000 == 0 and epoch_i > 0:
+        if epoch_i % args.update_check == 0 and epoch_i > 0:
             valid_loss = 0
-            for i in range(len(valid_x)):
-                valid_out = model(valid_x[i])
-                valid_loss += criterion(torch.squeeze(valid_out, dim=1), valid_y[i])
+            for i in range(val_seq_len):
+                valid_out = model(valid_x[i, :, 0])
+                valid_loss += criterion(torch.squeeze(valid_out, dim=0), valid_y[i, :, 0])
 
-            avg_val_loss = valid_loss.data[0]/len(valid_x)
-            lossEpoch[:]=avg_val_loss,epoch_i
-            validationLoss.append(lossEpoch)
-            np.save('saves/validLoss.npy',np.asarray(validationLoss))
-            
+            avg_val_loss = valid_loss.data[0] / val_seq_len
             losses['valid'].append(avg_val_loss)
+
+            utils.pickle_files('./results/losses.p', losses)
+
+            if losses['valid'][-1] <= min(losses['valid']):
+                print("New Best Model! Saving!")
+                utils.checkpoint({'epoch': epoch_i,
+                                  'state_dict': model.state_dict(),
+                                  'optimizer': optimizer.state_dict()},
+                                 './saves/checkpoint-' + str(args.network) + '-' + str(args.save_append) + '.pth.tar')
+
             if len(losses['valid']) > 4 and args.early_stop == 'true':
                 early_stop = utils.early_stop(losses['valid'])
                 if early_stop:
                     print("Stopping due to Early Stop Criterion")
                     break
 
-        if epoch_i == 1:
-            min_loss = losses['train'][-1]
-
         if epoch_i % 100 == 0 and epoch_i > 0:
             times = np.asarray(times)
+
+            # losses['train'].append(sum(temp_loss)/len(temp_loss))
+            # temp_loss = []
+            #
+            # if losses['train'][-1] < args.threshold:
+            #     seq_len += 2
+
             print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Batch:%f" %
                   (epoch_i, curr_loss, avg_val_loss, np.mean(times).astype(float)))
-            times =  []
-            lossEpoch[:]=curr_loss,epoch_i
-            trainLoss.append(lossEpoch)
-            np.save('saves/trainLoss.npy',np.asarray(trainLoss))
-        if epoch_i % args.update_check == 0 and epoch_i > 0:
-            update_loss = np.mean(losses['train'][-args.update_check:])
-            if update_loss < min_loss:
-                print("New Best Model! Saving!")
-                min_loss = update_loss
-                utils.checkpoint({'epoch': epoch_i,
-                                  'state_dict': model.state_dict(),
-                                  'optimizer': optimizer.state_dict()},
-                                 './saves/checkpoint-'+str(args.network)+'-'+str(args.save_append)+'.pth.tar')
+            times = []
+
     return model, losses
 
 
@@ -181,15 +178,15 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
     return_string = primer
 
     with open(file, 'w') as f:
-        primer_input = primer[:-1]
-        primer_input = Variable(utils.string_to_tensor(primer_input, char2int))
+        primer_input = [list(primer[:-1])]
+        primer_input = Variable(utils.string_to_tensor(primer_input, char2int, batch_size=1, seq_len=len(primer_input)))
         if gpu:
             primer_input = primer_input.cuda()
 
         for i in range(len(primer_input)):
             _ = model(primer_input[i])
 
-        inp = Variable(utils.string_to_tensor(primer[-1], char2int))
+        inp = Variable(utils.string_to_tensor(list(primer[-1]), char2int, batch_size=1, seq_len=1))
 
         for c_idx in range(args.generate_length):
             out = model(inp)
@@ -200,57 +197,60 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
             next_input = torch.multinomial(out, num_samples)[0]
             predict_char = int2char[next_input]
             return_string += predict_char
-            inp = Variable(utils.string_to_tensor(predict_char, char2int))
+            predict_char = list(predict_char)
+            inp = Variable(utils.string_to_tensor(predict_char, char2int, batch_size=1, seq_len=1))
             if gpu:
                 inp = inp.cuda()
         f.write(return_string)
         f.close()
 
-def heat_map(model,char2int,int2char,unit_num = 0, song_path = 'saves/song.txt',file_path = 'saves/heatmap.png'):
-    load_song = open(song_path,'r')
+
+def heat_map(model, char2int, int2char, unit_num=0, song_path='saves/song.txt', file_path='saves/heatmap.png'):
+    load_song = open(song_path, 'r')
     generated_song = load_song.read()
-    tensor_song = string_to_tensor(generated_song, char2int)
+    tensor_song = utils.string_to_tensor(generated_song, char2int)
     tensor_song = Variable(tensor_song)
     if gpu:
         tensor_song = tensor_song.cuda()
-    activations = []    
+    activations = []
     for index in range(len(tensor_song)):
-            model.zero_grad()
-            output = model(tensor_song[index])
-            hidden,cell = model.hidden
-            cell = cell.data.numpy()
-            hidden = hidden.data.numpy()
-            #print cell[0,0,0]
-            activations.append(hidden[0,0,unit_num])
+        model.zero_grad()
+        output = model(tensor_song[index])
+        hidden, cell = model.hidden
+        cell = cell.data.numpy()
+        hidden = hidden.data.numpy()
+        # print cell[0,0,0]
+        activations.append(hidden[0, 0, unit_num])
     activations = np.asarray(activations)
     song_length = activations.shape[0]
     height = int(np.sqrt(song_length))
-    width = song_length/height+1
-    song_activations  = np.zeros(height*width)
-    song_activations[:song_length]= activations[:]
-    song_activations = np.reshape(song_activations,(height,width))
-    
+    width = song_length / height + 1
+    song_activations = np.zeros(height * width)
+    song_activations[:song_length] = activations[:]
+    song_activations = np.reshape(song_activations, (height, width))
+
     plt.figure()
     heatmap = plt.pcolormesh(song_activations)
-    
+
     countH = 0
     countW = 0
     for index in range(len(generated_song)):
-        plt.text(countW,countH,generated_song[index])
-        countW+=1
-        if countW>=width:
-            countH+=1
+        plt.text(countW, countH, generated_song[index])
+        countW += 1
+        if countW >= width:
+            countH += 1
             countW = 0
-            
+
     plt.colorbar(heatmap)
-    plt.show()        
+    plt.show()
     return song_activations
- 
+
+
 def main():
     with open(args.file, 'r') as f:
         inp = f.read()
         # Create tokenizing dictionary for text in ABC notation
-        char2int = dict((a,b) for b,a in enumerate(list(set(inp))))
+        char2int = dict((a, b) for b, a in enumerate(list(set(inp))))
         # Create reverse lookup dictionary for the text
         int2char = {v: k for k, v in char2int.items()}
 
@@ -277,12 +277,8 @@ def main():
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
         model = utils.resume(model, filepath=args.resume_file)
-    generate_music(model, char2int, int2char)
-    
-    
-#    activations = heat_map(model,char2int,int2char,unit_num=0)
-    
-    
-    
-if __name__=="__main__":
+        generate_music(model, char2int, int2char)
+
+
+if __name__ == "__main__":
     main()
