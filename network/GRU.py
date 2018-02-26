@@ -33,9 +33,11 @@ class GRU(nn.Module):
         :return: Initialized weight matrix
         '''
         if torch.cuda.is_available():
-            return nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)).cuda())
+            return nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units),
+                                                  requires_grad=True).cuda())
         else:
-            return nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)))
+            return nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units),
+                                                  requires_grad=True))
 
     def forward(self, x):
         '''

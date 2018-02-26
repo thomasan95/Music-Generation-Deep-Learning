@@ -30,11 +30,15 @@ class LSTM(nn.Module):
 
     def init_hidden(self):
         if torch.cuda.is_available():
-            return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)).cuda()),
-                    nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units)).cuda()))
+            return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units),
+                                                   requires_grad=True).cuda()),
+                    nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units),
+                                                   requires_grad=True).cuda()))
         else:
-            return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))),
-                    nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units))))
+            return (nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units),
+                                                   requires_grad=True)),
+                    nn.init.xavier_normal(Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_units),
+                                                   requires_grad=True)))
 
     def forward(self, x):
         '''
