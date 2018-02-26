@@ -169,3 +169,27 @@ def load_files(filename):
     stuff = pickle.load(saved_stuff)
     saved_stuff.close()
     return stuff
+
+def song_parser(file_path):
+    '''
+    loads file of generated songs 
+    and splits up by <start> <end> terminators
+    returns as list of strings
+    '''
+    music_file = open(file_path,'r')
+    all_songs = music_file.read()
+    list_songs = []
+    loc = 0
+    while(found != -1):
+        loc = all_songs.find('<start>',loc)
+        found = all_songs.find('<start>',loc)
+        if found == -1:
+            found = all_songs.find('<end>',loc)
+            if found != -1:
+                list_songs.append(all_songs[loc:found])
+                return list_songs
+            else: 
+                return list_songs
+        else:
+            list_songs.append(all_songs[loc:found])
+            loc = found
