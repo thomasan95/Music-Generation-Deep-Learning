@@ -173,21 +173,20 @@ def load_files(filename):
 
 def song_parser(file_path):
     '''
-    loads file of generated songs and splits up by <start> <end> terminators
+    loads file of generated songs 
+    and splits up by <start> <end> terminators
     returns as list of strings
-    :param file_path: file path to save split song file
-    :type file_path: str
     '''
     music_file = open(file_path,'r')
     all_songs = music_file.read()
     list_songs = []
     loc = 0
-    found = 1
+    found = 0
     while(found != -1):
         loc = all_songs.find('<start>',loc)
-        found = all_songs.find('<start>',loc)
+        found = all_songs.find('<start>',loc+1)
         if found == -1:
-            found = all_songs.find('<end>',loc)
+            found = all_songs.find('<end>',loc+1)
             if found != -1:
                 list_songs.append(all_songs[loc:found])
                 return list_songs
