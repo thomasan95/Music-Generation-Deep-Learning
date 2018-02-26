@@ -6,6 +6,7 @@ from torch.autograd import Variable
 import utilities as utils
 import numpy as np
 from timeit import default_timer as timer
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=1, help="Specify batch size for network")
@@ -25,10 +26,11 @@ parser.add_argument("-uc", "--update_check", type=int, default=5000, help="How o
 parser.add_argument("-f", "--file", type=str, default='./data/input.txt', help="Input file to train on")
 parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.txt', help="Path to save generated file")
 parser.add_argument("-gc", "--generate_length", type=int, default=5000, help="How many characters to generate")
-parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
+parser.add_argument("-temp", "--temperature", type=float, default=0.4, help="Temperature for network")
 parser.add_argument("--save_append", type=str, default="", help="What to append to save path to make it unique")
-parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
+parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint-LSTM-.pth.tar', help="Path to file to load")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
+parser.add_argument("-hm", "--heatmap", type=str, default='true', help="Specify whether you want to generate a heat map")
 
 args = parser.parse_args()
 
@@ -71,7 +73,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         model = model.cuda()
         valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
     times = []
-
+    
     for epoch_i in range(1, args.max_epochs+1):
         loss = 0
         # Slowly increase seq_len during training
@@ -101,7 +103,11 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         for index in range(len(batch_x)):
             model.zero_grad()
             output = model(batch_x[index])
+            hidden = model.hidden
+            
+            
             loss += criterion(torch.squeeze(output, dim=1), batch_y[index])
+        
         delta_time = timer() - start
 
         times.append(delta_time)
@@ -200,7 +206,46 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
         f.write(return_string)
         f.close()
 
-
+def heat_map(model,char2int,int2char,unit_num = 0, song_path = 'saves/song.txt',file_path = 'saves/heatmap.png'):
+    load_song = open(song_path,'r')
+    generated_song = load_song.read()
+    tensor_song = string_to_tensor(generated_song, char2int)
+    tensor_song = Variable(tensor_song)
+    if gpu:
+        tensor_song = tensor_song.cuda()
+    activations = []    
+    for index in range(len(tensor_song)):
+            model.zero_grad()
+            output = model(tensor_song[index])
+            hidden,cell = model.hidden
+            cell = cell.data.numpy()
+            hidden = hidden.data.numpy()
+            #print cell[0,0,0]
+            activations.append(hidden[0,0,unit_num])
+    activations = np.asarray(activations)
+    song_length = activations.shape[0]
+    height = int(np.sqrt(song_length))
+    width = song_length/height+1
+    song_activations  = np.zeros(height*width)
+    song_activations[:song_length]= activations[:]
+    song_activations = np.reshape(song_activations,(height,width))
+    
+    plt.figure()
+    heatmap = plt.pcolormesh(song_activations)
+    
+    countH = 0
+    countW = 0
+    for index in range(len(generated_song)):
+        plt.text(countW,countH,generated_song[index])
+        countW+=1
+        if countW>=width:
+            countH+=1
+            countW = 0
+            
+    plt.colorbar(heatmap)
+    plt.show()        
+    return song_activations
+ 
 def main():
     with open(args.file, 'r') as f:
         inp = f.read()
@@ -232,8 +277,12 @@ def main():
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
         model = utils.resume(model, filepath=args.resume_file)
-        generate_music(model, char2int, int2char)
-
-
+    generate_music(model, char2int, int2char)
+    
+    
+#    activations = heat_map(model,char2int,int2char,unit_num=0)
+    
+    
+    
 if __name__=="__main__":
     main()
