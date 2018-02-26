@@ -145,8 +145,8 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                     break
 
             # Update sequence length
-            if seq_len < args.max_seq_len and len(losses['valid']) > 1 and (losses['valid'][-1]<losses['valid'][-2]):
-                seq_len += int(2/(losses['valid'][-1] - losses['valid'][-2]))
+            if seq_len < args.max_seq_len and len(losses['valid']) > 1 and (losses['valid'][-1] < losses['valid'][-2]):
+                seq_len += int(2/(losses['valid'][-2] - losses['valid'][-1]))
                 print("\nIncreasing sequence length to: " + str(seq_len))
 
         if epoch_i % 100 == 0 and epoch_i > 0:
