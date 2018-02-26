@@ -89,10 +89,10 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         # Slowly increase seq_len during training
         # if epoch_i > 100 and epoch_i % 100 == 0:
 
-        if epoch_i % 1000 == 0:
-            if seq_len < args.max_seq_len:
-                seq_len += 5
-                print("\nIncreasing sequence length to: " + str(seq_len))
+        # if epoch_i % 1000 == 0:
+        #     if seq_len < args.max_seq_len:
+        #         seq_len += 5
+        #         print("\nIncreasing sequence length to: " + str(seq_len))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, seq_len, args.batch_size)
@@ -143,6 +143,11 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                 if early_stop:
                     print("Stopping due to Early Stop Criterion")
                     break
+
+            # Update sequence length
+            if seq_len < args.max_seq_len and len(losses['valid']) > 1 and (losses['valid'][-1]<losses['valid'][-2]):
+                seq_len += int(2/(losses['valid'][-1] - losses['valid'][-2]))
+                print("\nIncreasing sequence length to: " + str(seq_len))
 
         if epoch_i % 100 == 0 and epoch_i > 0:
             times = np.asarray(times)
