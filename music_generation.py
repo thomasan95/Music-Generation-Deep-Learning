@@ -212,8 +212,9 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
 
 def heat_map(model, char2int, int2char, unit_num=0, song_path='saves/song.txt', file_path='saves/heatmap.png'):
     load_song = open(song_path, 'r')
-    generated_song = load_song.read()
-    tensor_song = utils.string_to_tensor(generated_song, char2int)
+    generated_song = list(load_song.read())
+    
+    tensor_song = utils.string_to_tensor([generated_song], char2int , 1, len(generated_song))
     tensor_song = Variable(tensor_song)
     if gpu:
         tensor_song = tensor_song.cuda()
@@ -233,17 +234,17 @@ def heat_map(model, char2int, int2char, unit_num=0, song_path='saves/song.txt', 
     song_activations = np.zeros(height * width)
     song_activations[:song_length] = activations[:]
     song_activations = np.reshape(song_activations, (height, width))
-
+    song_activations = [x for x in song_activations[::-1]]
     plt.figure()
-    heatmap = plt.pcolormesh(song_activations)
+    heatmap = plt.pcolormesh(song_activations,cmap = 'coolwarm')
 
-    countH = 0
+    countH = height-1
     countW = 0
     for index in range(len(generated_song)):
         plt.text(countW, countH, generated_song[index])
         countW += 1
         if countW >= width:
-            countH += 1
+            countH -= 1
             countW = 0
 
     plt.colorbar(heatmap)
@@ -276,19 +277,19 @@ def main():
     criterion = torch.nn.CrossEntropyLoss()
 
     # Initialize optimizer for network   
-    if args.optim == 'Adagrad':
-        optimizer = optim.Adagrad(model.parameters(), lr=args.learning_rate)
-    elif args.optim == "RMS":
-        optimizer = optim.RMSprop(model.parameters(), lr=args.learning_rate)
-    else:
-        optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-
-    if args.training == 'true':
-        _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
-    else:
-        model = utils.resume(model, filepath=args.resume_file)
-        generate_music(model, char2int, int2char)
-
+#    if args.optim == 'Adagrad':
+#        optimizer = optim.Adagrad(model.parameters(), lr=args.learning_rate)
+#    elif args.optim == "RMS":
+#        optimizer = optim.RMSprop(model.parameters(), lr=args.learning_rate)
+#    else:
+#        optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+#
+#    if args.training == 'true':
+#        _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
+#    else:
+#        model = utils.resume(model, filepath=args.resume_file)
+#        generate_music(model, char2int, int2char)
+    hmap = heat_map(model,char2int,int2char)  
 
 if __name__ == "__main__":
     main()
