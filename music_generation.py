@@ -30,6 +30,7 @@ parser.add_argument("-gc", "--generate_length", type=int, default=5000, help="Ho
 parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
 parser.add_argument("--save_append", type=str, default="", help="What to append to save path to make it unique")
 parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
+parser.add_argument("-rt", "--resume_training", type=str, default='False', help="Specify whether to continue training a saved model")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
 parser.add_argument("-ms", "--max_seq_len", type=int, default=700, help="max length of input to batch")
 parser.add_argument("-op", "--optim", type=str, default='Adam', help="Specify type of optimizer for network")
@@ -292,7 +293,10 @@ def main():
     else:
         optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
-    if args.training == 'true':
+    if args.training == 'true' and args.resume_training=='True':
+        model = utils.resume(model, filepath=args.resume_file)
+        _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
+    elif args.training =='true':
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
         model = utils.resume(model, filepath=args.resume_file)
