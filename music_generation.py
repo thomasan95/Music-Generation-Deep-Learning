@@ -33,6 +33,11 @@ parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoin
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
 parser.add_argument("-ms", "--max_seq_len", type=int, default=700, help="max length of input to batch")
 parser.add_argument("-op", "--optim", type=str, default='Adam', help="Specify type of optimizer for network")
+parser.add_argument("-ms", "--max_seq_len", type=int, default=700, help="max length of input to batch")
+parser.add_argument("-un", "--unit_number", type=int, default=0, help="the unit number that you wish to generate a heat map for")
+parser.add_argument("-ghm", "--generate_heat_map", type=str, default=false, help="whether you wish to generate songs and then a heat map")
+parser.add_argument("-hm", "--heat_map", type=str, default=false, help="whether you wish to generate a heat map for pregenerated song")
+parser.add_argument("-hmp", "--heat_map_path", type=str, default=false, help="path of the pregenerated song you want to generate a heat map for")
 
 args = parser.parse_args()
 
