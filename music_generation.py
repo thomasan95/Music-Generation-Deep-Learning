@@ -9,7 +9,7 @@ from timeit import default_timer as timer
 
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=1, help="Specify batch size for network")
-parser.add_argument("-sl", "--seq_len", type=int, default=25, help="Initial sequence length to train on")
+parser.add_argument("-sl", "--seq_len", type=int, default=5, help="Initial sequence length to train on")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
 parser.add_argument("-e", "--max_epochs", type=int, default=1000000, help="Specify number of epochs to train network")
 parser.add_argument("-thresh", "--threshold", type=float, default=3, help="Threshold for when to increase batch_size")
@@ -29,10 +29,13 @@ parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Tem
 parser.add_argument("--save_append", type=str, default="", help="What to append to save path to make it unique")
 parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
+parser.add_argument("-ms", "--max_seq_len", type=int, default=700, help="max length of input to batch")
 
 args = parser.parse_args()
 
 gpu = torch.cuda.is_available()
+if gpu:
+    print("\nRunning on GPU\n")
 
 
 def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int):
@@ -76,13 +79,10 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         loss = 0
         # Slowly increase seq_len during training
 
-        if epoch_i % 100 == 0:
-            if np.mean(losses['train'][-100:]) < args.threshold:
-                if gpu:
-                    seq_len = seq_len + 50
-                else:
-                    seq_len = seq_len + 5
-                print("Sequence Length changed to: " + str(seq_len))
+        if epoch_i % 1000 == 0:
+            if seq_len < args.max_seq_len:
+                seq_len += 5
+                print("\nIncreasing sequence length to: " + str(seq_len))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
         batch_x, batch_y = utils.random_data_sample(train_data, seq_len, args.batch_size)
