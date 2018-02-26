@@ -198,6 +198,9 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
 
         inp = Variable(utils.string_to_tensor(list(primer[-1]), char2int, batch_size=1, seq_len=1))
 
+        if gpu:
+            inp = inp.cuda()
+
         for c_idx in range(args.generate_length):
             out = model(inp)
             # Normalize distribution by temperature and turn into a vector
