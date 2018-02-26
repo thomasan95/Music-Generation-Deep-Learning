@@ -32,6 +32,7 @@ parser.add_argument("--save_append", type=str, default="", help="What to append 
 parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
 parser.add_argument("-ms", "--max_seq_len", type=int, default=700, help="max length of input to batch")
+parser.add_argument("-op", "--optim", type=str, default='Adam', help="Specify type of optimizer for network")
 
 args = parser.parse_args()
 
@@ -270,8 +271,14 @@ def main():
     # Initialize Loss function for network
     criterion = torch.nn.CrossEntropyLoss()
 
-    # Initialize optimizer for network
-    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+    # Initialize optimizer for network   
+    if args.optim == 'Adagrad':
+        optimizer = optim.Adagrad(model.parameters(), lr=args.learning_rate)
+    elif args.optim == "RMS":
+        optimizer = optim.RMSprop(model.parameters(), lr=args.learning_rate)
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+
 
     if args.training == 'true':
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
