@@ -45,6 +45,6 @@ class LSTM(nn.Module):
         '''
         # Use 1's because we want character level
         # x = self.emb(x.view(1, -1)) # 1 x Batch Size
-        out, self.hidden = self.lstm(x.view(1, 1, -1), self.hidden)
+        out, self.hidden = self.lstm(x.view(1, -1, 1), self.hidden)
         char_out = self.dense(out)
         return char_out
