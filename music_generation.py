@@ -294,7 +294,9 @@ def main():
         optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
     if args.training == 'true' and args.resume_training=='True':
+        print('Loading model...')
         model = utils.resume(model, filepath=args.resume_file)
+        print('Model loaded from ' + args.resume_file)
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     elif args.training =='true':
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
