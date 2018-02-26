@@ -18,7 +18,7 @@ class GRU(nn.Module):
         self.batch_size = batch_size
 
         # Create GRU network
-        self.gru = nn.GRU(input_size=batch_size,
+        self.gru = nn.GRU(input_size=1,
                           hidden_size=hidden_units,
                           num_layers=num_layers,
                           dropout=dropout)
@@ -46,6 +46,6 @@ class GRU(nn.Module):
         '''
         # Use 1's because we want character level
         # x = self.emb(x.view(1, -1)) # 1 x Batch Size
-        out, self.hidden = self.gru(x.view(1, 1, -1), self.hidden)
+        out, self.hidden = self.gru(x.view(1, -1, 1), self.hidden)
         char_out = self.dense(out)
         return char_out

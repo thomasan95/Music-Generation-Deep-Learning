@@ -19,7 +19,7 @@ class LSTM(nn.Module):
 
         # Create LSTM network
         # self.emb = nn.Embedding(batch_size, hidden_units)
-        self.lstm = nn.LSTM(input_size=batch_size,
+        self.lstm = nn.LSTM(input_size=1,
                             hidden_size=hidden_units,
                             num_layers=num_layers,
                             dropout=dropout)
@@ -45,6 +45,6 @@ class LSTM(nn.Module):
         '''
         # Use 1's because we want character level
         # x = self.emb(x.view(1, -1)) # 1 x Batch Size
-        out, self.hidden = self.lstm(x.view(1, 1, -1), self.hidden)
+        out, self.hidden = self.lstm(x.view(1, -1, 1), self.hidden)
         char_out = self.dense(out)
         return char_out
