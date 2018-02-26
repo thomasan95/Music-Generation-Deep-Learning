@@ -19,7 +19,7 @@ class LSTM(nn.Module):
 
         # Create LSTM network
         # self.emb = nn.Embedding(batch_size, hidden_units)
-        self.lstm = nn.LSTM(input_size=batch_size,
+        self.lstm = nn.LSTM(input_size=1,
                             hidden_size=hidden_units,
                             num_layers=num_layers,
                             dropout=dropout)
