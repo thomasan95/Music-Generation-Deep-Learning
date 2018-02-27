@@ -243,7 +243,7 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
         f.close()
 
 
-def heat_map(model, char2int, int2char, unit_num=0, song_path=args.heat_map_path, file_path='saves/heatmap.png'):
+def heat_map(model, char2int, int2char, unit_num=0, song_path=args.heat_map_path, file_path='saves/heat_map'):
     generated_songs = utils.song_parser(song_path)
     num_songs = len(generated_songs)
     
@@ -271,7 +271,7 @@ def heat_map(model, char2int, int2char, unit_num=0, song_path=args.heat_map_path
         song_activations[:song_length] = activations[:]
         song_activations = np.reshape(song_activations, (height, width))
         song_activations = [x for x in song_activations[::-1]]
-        plt.figure()
+        fig = plt.figure()
         heatmap = plt.pcolormesh(song_activations,cmap = 'coolwarm')
     
         countH = height-1
@@ -285,7 +285,7 @@ def heat_map(model, char2int, int2char, unit_num=0, song_path=args.heat_map_path
     
         plt.colorbar(heatmap)
         plt.show()
-    
+        fig.savefig(file_path+str(song_ind)+'.png')
 
 
 def main():
