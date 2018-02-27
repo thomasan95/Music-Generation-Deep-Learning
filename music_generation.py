@@ -181,7 +181,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
             # losses['train'].append(sum(temp_loss)/len(temp_loss))
             # temp_loss = []
 
-            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tTime Per %d Batch Size:%f" %
+            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tTime Per %d Batch Size: %f" %
                   (epoch_i, curr_loss, avg_val_loss, args.batch_size, sum(times)/len(times)))
             times = []
 
