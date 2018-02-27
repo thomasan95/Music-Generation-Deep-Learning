@@ -24,9 +24,13 @@ def generate_plot(file, save_file=""):
     :type save_file: str
     :return: None
     '''
+
+    assert isinstance(file, str)
+    assert isinstance(save_file, str)
     if file == "":
         print("Please specify file path")
         return -1
+    assert (file[-2:] == '.p')  # Must specify that the file is a pickled file with the .p!
 
     losses = utils.load_files(file)
     epochs_train = len(losses['train'])
