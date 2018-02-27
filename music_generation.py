@@ -34,7 +34,7 @@ parser.add_argument("--save_append", type=str, default="('{:%b_%d_%H:%M}'.format
                     help="What to append to save path to make it unique")
 parser.add_argument("-rt", "--resume_training", type=str, default='False', help="Specify whether to continue training a saved model")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
-parser.add_argument("-ms", "--max_seq_len", type=int, default=700, help="max length of input to batch")
+parser.add_argument("-ms", "--max_seq_len", type=int, default=600, help="max length of input to batch")
 parser.add_argument("-op", "--optim", type=str, default='Adam', help="Specify type of optimizer for network")
 parser.add_argument("-un", "--unit_number", type=int, default=0, help="the unit number that you wish to generate a heat map for")
 parser.add_argument("-ghm", "--generate_heat_map", type=str, default='false', help="whether you wish to generate songs and then a heat map")
