@@ -75,7 +75,7 @@ def val_to_tensor(val, dictionary, batch_size, labels=False):
     :rtype: torch.LongTensor or torch.FloatTensor, int
     '''
     amount_to_pad = len(val)%batch_size
-    val += [dictionary['<pad>']]*amount_to_pad
+    val += [dictionary[0]]*amount_to_pad
     val_seq_len = len(val)//batch_size
     if labels:
         tensor = torch.zeros(val_seq_len, batch_size, 1).long()

@@ -295,7 +295,9 @@ def main():
         inp = f.read()
         # Create tokenizing dictionary for text in ABC notation
         char2int = dict((a, b) for b, a in enumerate(list(set(inp))))
-        char2int['<pad>'] = len(char2int)
+        char2int[0] = len(char2int)
+        print(len(char2int))
+
         # Create reverse lookup dictionary for the text
         int2char = {v: k for k, v in char2int.items()}
 
