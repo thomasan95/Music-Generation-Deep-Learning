@@ -147,7 +147,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                                   'optimizer': optimizer.state_dict()},
                                   './saves/checkpoint-' + str(args.save_append) + '.pth.tar')
 
-            if len(losses['valid']) > 4 and args.early_stop == 'true':
+            if len(losses['valid']) > 6 and args.early_stop == 'true':
                 early_stop = utils.early_stop(losses['valid'])
                 if early_stop:
                     print("Stopping due to Early Stop Criterion")
