@@ -130,7 +130,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
             avg_val_loss = valid_loss.data[0] / val_seq_len
             losses['valid'].append(avg_val_loss)
 
-            utils.pickle_files('./results/losses_' +str(args.network) + '_' +str(args.save_append) + '.p', losses)
+            utils.pickle_files('./results/losses.p', losses)
 
             if losses['valid'][-1] <= min(losses['valid']):
                 print("New Best Model! Saving!")
