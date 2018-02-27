@@ -51,7 +51,8 @@ if gpu:
     print("\nRunning on GPU\n")
 
 
-def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int, losses = {'train': [], 'valid': []}, epoch=0):
+def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int,
+          losses = {'train': [], 'valid': []}, epoch=0):
     '''
     Function trains the model. It will save the current model every update_check iterations so model can then be
     loaded and resumed either for training or for music generation in the future
@@ -72,22 +73,18 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     :type char2int: dict
     :param losses: dictionary containing the training and validation loss
     :type losses: dict
+    :param epoch: resume epoch
+    :type epoch: int
     :return: The trained model and the corresponding losses
     :rtype: PyTorch Model, dict
     '''
-    
+
     avg_val_loss = 0
     running_mean_benchmark = 3.0
 
     valid_x, valid_y = valid_data[:-1], valid_data[1:]
     valid_x = utils.val_to_tensor(valid_x, char2int, args.batch_size)
     valid_y = utils.val_to_tensor(valid_y, char2int, args.batch_size, labels=True)
-
-    # valid_x, valid_y = [valid_data[:-1]]*args.batch_size, [valid_data[1:]]*args.batch_size
-    # whole_val_len = len(valid_data) - 1
-    # valid_x = utils.string_to_tensor(valid_x, char2int, args.batch_size, whole_val_len)
-    # valid_y = utils.string_to_tensor(valid_y, char2int, args.batch_size, whole_val_len, labels=True)
-
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
     # If GPU is available, change network to run on GPU
@@ -145,8 +142,8 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
             losses['valid'].append(avg_val_loss)
             losses['train'].append(sum(temp_loss)/len(temp_loss))
             temp_loss = []
-            utils.pickle_files('./results/losses-' + str(args.save_append) + '.p', losses)
 
+            utils.pickle_files('./results/losses-' + str(args.save_append) + '.p', losses)
 
             if losses['valid'][-1] <= min(losses['valid']):
                 print("New Best Model! Saving!")
@@ -155,9 +152,9 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                                   'seq_len': seq_len,
                                   'state_dict': model.state_dict(),
                                   'optimizer': optimizer.state_dict()},
-                                  './saves/checkpoint-' + str(args.save_append) + '.pth.tar')
+                                 './saves/checkpoint-'+str(args.save_append)+'.pth.tar')
 
-            if len(losses['valid']) > 6 and args.early_stop == 'true':
+            if len(losses['valid']) > 6 and args.early_stop.lower() == 'true':
                 early_stop = utils.early_stop(losses['valid'])
                 if early_stop:
                     print("Stopping due to Early Stop Criterion")
@@ -183,16 +180,11 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                               + str(running_mean_benchmark))
 
         if epoch_i % 100 == 0 and epoch_i > 0:
-            times = np.asarray(times)
-
             # losses['train'].append(sum(temp_loss)/len(temp_loss))
             # temp_loss = []
-            #
-            # if losses['train'][-1] < args.threshold:
-            #     seq_len += 2
 
-            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Batch:%f" %
-                  (epoch_i, curr_loss, avg_val_loss, np.mean(times).astype(float)))
+            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tTime Per %d Batch Size: %f" %
+                  (epoch_i, curr_loss, avg_val_loss, args.batch_size, sum(times)/100))
             times = []
 
     return model, losses
@@ -320,24 +312,23 @@ def main():
 
     # Initialize Loss function for network   
     criterion = torch.nn.CrossEntropyLoss()
- 
 
     # Initialize optimizer for network   
-    if args.optim == 'Adagrad':
+    if args.optim.lower() == 'adagrad':
         optimizer = optim.Adagrad(model.parameters(), lr=args.learning_rate)
-    elif args.optim == "RMS":
+    elif args.optim.lower() == "rms":
         optimizer = optim.RMSprop(model.parameters(), lr=args.learning_rate)
     else:
         optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
-    if args.training == 'true' and args.resume_training=='True':
+    if args.training.lower() == 'true' and args.resume_training.lower() == 'true':
         print('Loading model...')
         model, optimizer, epoch_i, losses, seq_len = utils.resume(model, optimizer, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
         print('Resuming training with model loaded from ' + './saves/checkpoint-' + str(args.save_append) + '.pth.tar')
         print('Epoch: %d\tCurrent Train Loss: %f\tCurrent Valid Loss: %f' %(epoch_i,losses['train'][-1],losses['valid'][-1]))
         _, _ = train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int, losses=losses, epoch=(epoch_i+1))
 
-    elif args.training =='true':
+    elif args.training.lower() == 'true':
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
         model, _, _, _, _ = utils.resume(model, optimizer, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
