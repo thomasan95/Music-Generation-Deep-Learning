@@ -25,6 +25,10 @@ def grab_data(split_pct, music_data):
     split_idx = len(music_data) - len(splits[-1]) - len('<start>')
     return list(music_data[:split_idx]), list(music_data[split_idx:])
 
+def valid_to_batch(valid, batch_size):
+    amount_to_pad = len(valid) % batch_size
+
+
 
 def random_data_sample(data, seq_len, batch_size):
     ''' Grabs a random chunk of data from the training set.
@@ -54,6 +58,37 @@ def random_data_sample(data, seq_len, batch_size):
         x.append(data[random_idx:random_idx + seq_len])
         y.append(data[random_idx + 1:random_idx + seq_len + 1])
     return x, y
+
+
+def val_to_tensor(val, dictionary, batch_size, labels=False):
+    '''
+    Performs padding on validation set and then reshapes into appropriate tensors
+    :param val: validation set
+    :type val: list
+    :param dictionary: char2int to tokenize validation
+    :type dictionary: dict
+    :param batch_size: how much to split validation into
+    :param batch_size: int
+    :param labels: whether to cast tensor into long or keep as float
+    :type labels: bool
+    :return: torch.LongTensor or torch.FloatTensor
+    '''
+    amount_to_pad = len(val)%batch_size
+    val += val*dictionary['<pad>']*amount_to_pad
+    val_seq_len = len(val)//batch_size
+    if labels:
+        tensor = torch.zeros(val_seq_len, batch_size, 1).long()
+    else:
+        tensor = torch.zeros(val_seq_len, batch_size, 1).float()
+
+    for i in range(len(val)):
+        val[i] = dictionary[val[i]]
+
+    for batch_i in range(batch_size):
+        for seq_i in range(val_seq_len):
+            tensor[seq_i, batch_i, 0] = val[seq_i]
+
+    return tensor
 
 
 def string_to_tensor(inp, dictionary, batch_size, seq_len, labels=False):
