@@ -165,13 +165,15 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                     print("\nIncreasing sequence length to: " + str(seq_len))
             elif args.update_seq == 'train':
                 if seq_len < args.max_seq_len:
-                    if sum(losses['train'])/len(losses['train']) < running_mean_benchmark:
-                        delta_rmean = round(running_mean_benchmark - sum(losses['train'])/len(losses['train']), 1)
+                    curr_running_mean = round(sum(losses['train'])/len(losses['train']), 1)
+                    if curr_running_mean < running_mean_benchmark:
+                        delta_rmean = round(running_mean_benchmark - curr_running_mean, 1)
                         seq_len = int(seq_len * 1.5**(delta_rmean*10))
                         if seq_len > args.max_seq_len:
                             seq_len = args.max_seq_len
                         running_mean_benchmark -= delta_rmean
-                        print("\nIncreasing sequence length to: " + str(seq_len))
+                        print("\nIncreasing sequence length to: " + str(seq_len) + " with benchmark "
+                              + str(running_mean_benchmark))
 
         if epoch_i % 100 == 0 and epoch_i > 0:
             times = np.asarray(times)
