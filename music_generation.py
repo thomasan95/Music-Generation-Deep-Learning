@@ -76,9 +76,12 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     
     avg_val_loss = 0
     running_mean_benchmark = 3.0
-    valid_x, valid_y = valid_data[:-1], valid_data[1:]
-    valid_x, val_seq_len = utils.val_to_tensor(valid_x, char2int, args.batch_size)
-    valid_y, _ = utils.val_to_tensor(valid_y, char2int, args.batch_size, labels=True)
+    whole_val_len = len(valid_data)-1
+    valid_x, valid_y = [valid_data[:-1]]*args.batch_size, [valid_data[1:]]*args.batch_size
+    valid_x = utils.string_to_tensor(valid_x, char2int, args.batch_size, whole_val_len)
+    valid_y = utils.string_to_tensor(valid_y, char2int, args.batch_size, whole_val_len, labels=True)
+    # valid_x = utils.val_to_tensor(valid_x, char2int, args.batch_size)
+    # valid_y = utils.val_to_tensor(valid_y, char2int, args.batch_size, labels=True)
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
     # If GPU is available, change network to run on GPU
@@ -127,11 +130,11 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
 
         if epoch_i % args.update_check == 0 and epoch_i > 0:
             valid_loss = 0
-            for i in range(val_seq_len):
+            for i in range(len(valid_x)):
                 valid_out = model(valid_x[i, :, 0])
                 valid_loss += criterion(torch.squeeze(valid_out, dim=0), valid_y[i, :, 0])
 
-            avg_val_loss = valid_loss.data[0] / val_seq_len
+            avg_val_loss = valid_loss.data[0] / len(valid_x)
             losses['valid'].append(avg_val_loss)
             losses['train'].append(sum(temp_loss)/len(temp_loss))
             temp_loss = []
