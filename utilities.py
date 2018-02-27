@@ -81,12 +81,9 @@ def val_to_tensor(val, dictionary, batch_size, labels=False):
     else:
         tensor = torch.zeros(val_seq_len, batch_size, 1).float()
 
-    for i in range(len(val)):
-        val[i] = dictionary[val[i]]
-
     for batch_i in range(batch_size):
         for seq_i in range(val_seq_len):
-            tensor[seq_i, batch_i, 0] = val[seq_i]
+            tensor[seq_i, batch_i, 0] = dictionary[val[batch_i*seq_i + seq_i]]
 
     return tensor
 
