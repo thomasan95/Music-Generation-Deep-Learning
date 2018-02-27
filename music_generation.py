@@ -45,7 +45,7 @@ parser.add_argument('--use_gpu_f', action='store_false', default=True, help='Fla
 
 args = parser.parse_args()
 
-gpu = torch.cuda.is_available() and use_gpu_f 
+gpu = torch.cuda.is_available() and args.use_gpu_f 
 if gpu:
     print("\nRunning on GPU\n")
 
