@@ -41,10 +41,11 @@ parser.add_argument("-ghm", "--generate_heat_map", type=str, default='false', he
 parser.add_argument("-hm", "--heat_map", type=str, default='false', help="whether you wish to generate a heat map for pregenerated song")
 parser.add_argument("-hmp", "--heat_map_path", type=str, default='false', help="path of the pregenerated song you want to generate a heat map for")
 parser.add_argument("-us", "--update_seq", type=str, default='valid', help="Update sequence length based off of validation loss or train loss")
+parser.add_argument('--use_gpu_f', action='store_false', default=True, help='Flag to NOT gpu (STORE_FALSE)(default: True)')
 
 args = parser.parse_args()
 
-gpu = torch.cuda.is_available()
+gpu = torch.cuda.is_available() and use_gpu_f 
 if gpu:
     print("\nRunning on GPU\n")
 
