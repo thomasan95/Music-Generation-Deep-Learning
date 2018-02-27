@@ -88,7 +88,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
     # If GPU is available, change network to run on GPU
-    print gpu
+
     if gpu:
         model = model.cuda()
         valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
