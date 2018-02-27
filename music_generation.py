@@ -30,22 +30,23 @@ parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.
                     help="Path to save generated file")
 parser.add_argument("-gc", "--generate_length", type=int, default=5000, help="How many characters to generate")
 parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
-parser.add_argument("--save_append", type=str, default="('{:%b_%d_%H:%M}'.format(datetime.datetime.now()))", 
+parser.add_argument("--save_append", type=str, default=('{:%b_%d_%H:%M}'.format(datetime.datetime.now())), 
                     help="What to append to save path to make it unique")
 parser.add_argument("-rt", "--resume_training", type=str, default='False', help="Specify whether to continue training a saved model")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
 parser.add_argument("-ms", "--max_seq_len", type=int, default=600, help="max length of input to batch")
 parser.add_argument("-op", "--optim", type=str, default='Adam', help="Specify type of optimizer for network")
 parser.add_argument("-un", "--unit_number", type=int, default=0, help="the unit number that you wish to generate a heat map for")
-parser.add_argument("-ghm", "--generate_heat_map", type=str, default='false', help="whether you wish to generate songs and then a heat map")
-parser.add_argument("-hm", "--heat_map", type=str, default='false', help="whether you wish to generate a heat map for pregenerated song")
-parser.add_argument("-hmp", "--heat_map_path", type=str, default='false', help="path of the pregenerated song you want to generate a heat map for")
+parser.add_argument("-ghm", "--generate_heat_map", action='store_true', default='False', help="whether you wish to generate songs and then a heat map")
+parser.add_argument("-hm", "--heat_map", action='store_true', default='False', help="whether you wish to generate a heat map for pregenerated song")
+parser.add_argument("-hmp", "--heat_map_path", type=str, default='saves/song.txt', help="path of the pregenerated song you want to view a heat map for")
 parser.add_argument("-us", "--update_seq", type=str, default='valid', help="Update sequence length based off of validation loss or train loss")
 parser.add_argument('--use_gpu_f', action='store_false', default=True, help='Flag to NOT gpu (STORE_FALSE)(default: True)')
 
 args = parser.parse_args()
 
-gpu = torch.cuda.is_available() and args.use_gpu_f 
+gpu = (torch.cuda.is_available() and args.use_gpu_f )
+
 if gpu:
     print("\nRunning on GPU\n")
 
@@ -87,6 +88,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
     # If GPU is available, change network to run on GPU
+
     if gpu:
         model = model.cuda()
         valid_x, valid_y = valid_x.cuda(), valid_y.cuda()
@@ -178,16 +180,11 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                               + str(running_mean_benchmark))
 
         if epoch_i % 100 == 0 and epoch_i > 0:
-            times = np.asarray(times)
-
             # losses['train'].append(sum(temp_loss)/len(temp_loss))
             # temp_loss = []
-            #
-            # if losses['train'][-1] < args.threshold:
-            #     seq_len += 2
 
-            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Batch:%f" %
-                  (epoch_i, curr_loss, avg_val_loss, np.mean(times).astype(float)))
+            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tTime Per %d Batch Size: %f" %
+                  (epoch_i, curr_loss, avg_val_loss, args.batch_size, sum(times)/100))
             times = []
 
     return model, losses
@@ -246,46 +243,49 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
         f.close()
 
 
-def heat_map(model, char2int, int2char, unit_num=0, song_path='saves/song.txt', file_path='saves/heatmap.png'):
-    load_song = open(song_path, 'r')
-    generated_song = list(load_song.read())
+def heat_map(model, char2int, int2char, unit_num=0, song_path=args.heat_map_path, file_path='saves/heat_map'):
+    generated_songs = utils.song_parser(song_path)
+    num_songs = len(generated_songs)
     
-    tensor_song = utils.string_to_tensor([generated_song], char2int , 1, len(generated_song))
-    tensor_song = Variable(tensor_song)
-    if gpu:
-        tensor_song = tensor_song.cuda()
-    activations = []
-    for index in range(len(tensor_song)):
-        model.zero_grad()
-        output = model(tensor_song[index])
-        hidden, cell = model.hidden
-        cell = cell.data.numpy()
-        hidden = hidden.data.numpy()
-        # print cell[0,0,0]
-        activations.append(hidden[0, 0, unit_num])
-    activations = np.asarray(activations)
-    song_length = activations.shape[0]
-    height = int(np.sqrt(song_length))
-    width = song_length / height + 1
-    song_activations = np.zeros(height * width)
-    song_activations[:song_length] = activations[:]
-    song_activations = np.reshape(song_activations, (height, width))
-    song_activations = [x for x in song_activations[::-1]]
-    plt.figure()
-    heatmap = plt.pcolormesh(song_activations,cmap = 'coolwarm')
-
-    countH = height-1
-    countW = 0
-    for index in range(len(generated_song)):
-        plt.text(countW, countH, generated_song[index])
-        countW += 1
-        if countW >= width:
-            countH -= 1
-            countW = 0
-
-    plt.colorbar(heatmap)
-    plt.show()
-    return song_activations
+    for song_ind in range(num_songs):
+        generated_song = generated_songs[song_ind]
+        print(generated_song)
+        tensor_song = utils.string_to_tensor(list(generated_song), char2int , 1, 1)
+        tensor_song = Variable(tensor_song)
+        if gpu:
+            tensor_song = tensor_song.cuda()
+        activations = []
+        for index in range(len(tensor_song)):
+            model.zero_grad()
+            output = model(tensor_song[index])
+            hidden, cell = model.hidden
+            cell = cell.data.numpy()
+            hidden = hidden.data.numpy()
+            # print cell[0,0,0]
+            activations.append(hidden[0, 0, unit_num])
+        activations = np.asarray(activations)
+        song_length = activations.shape[0]
+        height = int(np.sqrt(song_length))
+        width = song_length / height + 1
+        song_activations = np.zeros(height * width)
+        song_activations[:song_length] = activations[:]
+        song_activations = np.reshape(song_activations, (height, width))
+        song_activations = [x for x in song_activations[::-1]]
+        fig = plt.figure()
+        heatmap = plt.pcolormesh(song_activations,cmap = 'coolwarm')
+    
+        countH = height-1
+        countW = 0
+        for index in range(len(generated_song)):
+            plt.text(countW, countH, generated_song[index])
+            countW += 1
+            if countW >= width:
+                countH -= 1
+                countW = 0
+    
+        plt.colorbar(heatmap)
+        plt.show()
+        fig.savefig(file_path+str(song_ind)+'.png')
 
 
 def main():
@@ -332,8 +332,12 @@ def main():
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
         model, _, _, _, _ = utils.resume(model, optimizer, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
-        generate_music(model, char2int, int2char)
-#    hmap = heat_map(model,char2int,int2char)  
+        if args.heat_map:
+            heat_map(model,char2int,int2char) 
+        else:
+            generate_music(model, char2int, int2char)
+            if args.generate_heat_map:
+                heat_map(model,char2int,int2char,song_path = args.generate_file)  
 
 if __name__ == "__main__":
     main()
