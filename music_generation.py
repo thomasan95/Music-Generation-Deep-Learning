@@ -30,7 +30,7 @@ parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.
                     help="Path to save generated file")
 parser.add_argument("-gc", "--generate_length", type=int, default=5000, help="How many characters to generate")
 parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
-parser.add_argument("--save_append", type=str, default="('{:%b_%d_%H:%M}'.format(datetime.datetime.now()))", 
+parser.add_argument("--save_append", type=str, default=('{:%b_%d_%H:%M}'.format(datetime.datetime.now())), 
                     help="What to append to save path to make it unique")
 parser.add_argument("-rt", "--resume_training", type=str, default='False', help="Specify whether to continue training a saved model")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
