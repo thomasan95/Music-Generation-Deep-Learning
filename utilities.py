@@ -84,7 +84,7 @@ def val_to_tensor(val, dictionary, batch_size, labels=False):
 
     for batch_i in range(batch_size):
         for seq_i in range(val_seq_len):
-            tensor[seq_i, batch_i, 0] = dictionary[val[batch_i*seq_i + seq_i]]
+            tensor[seq_i, batch_i, 0] = dictionary[val[batch_i*val_seq_len + seq_i]]
 
     return tensor
 

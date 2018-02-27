@@ -76,12 +76,16 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     
     avg_val_loss = 0
     running_mean_benchmark = 3.0
-    whole_val_len = len(valid_data)-1
-    valid_x, valid_y = [valid_data[:-1]]*args.batch_size, [valid_data[1:]]*args.batch_size
-    valid_x = utils.string_to_tensor(valid_x, char2int, args.batch_size, whole_val_len)
-    valid_y = utils.string_to_tensor(valid_y, char2int, args.batch_size, whole_val_len, labels=True)
-    # valid_x = utils.val_to_tensor(valid_x, char2int, args.batch_size)
-    # valid_y = utils.val_to_tensor(valid_y, char2int, args.batch_size, labels=True)
+
+    valid_x, valid_y = valid_data[:-1], valid_data[1:]
+    valid_x = utils.val_to_tensor(valid_x, char2int, args.batch_size)
+    valid_y = utils.val_to_tensor(valid_y, char2int, args.batch_size, labels=True)
+
+    # valid_x, valid_y = [valid_data[:-1]]*args.batch_size, [valid_data[1:]]*args.batch_size
+    # whole_val_len = len(valid_data) - 1
+    # valid_x = utils.string_to_tensor(valid_x, char2int, args.batch_size, whole_val_len)
+    # valid_y = utils.string_to_tensor(valid_y, char2int, args.batch_size, whole_val_len, labels=True)
+
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
     # If GPU is available, change network to run on GPU
