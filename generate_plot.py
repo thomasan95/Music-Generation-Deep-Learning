@@ -3,7 +3,7 @@ import utilities as utils
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--file", type=str, help="Path to pickle file of losses")
+parser.add_argument("-f", "--file", type=str, default="", help="Path to pickle file of losses")
 parser.add_argument("-s", "--save_file", type=str, default="losses", help="file to save as. Will save under results")
 parser.add_argument("-uc", "--update_check", type=int, default=1000, help="how many iterations per update")
 args = parser.parse_args()
@@ -18,6 +18,10 @@ def generate_plot(file, save_file):
     :type save_file: str
     :return: None
     '''
+    if file == "":
+        print("Please specify file path")
+        return -1
+
     losses = utils.load_files(file)
     epochs_train = len(losses['train'])
     epochs_val = len(losses['valid'])
