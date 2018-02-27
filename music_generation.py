@@ -332,11 +332,11 @@ def main():
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
         model, _, _, _, _ = utils.resume(model, optimizer, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
-        if args.heat_map:
+        if args.heat_map.lower()=='true':
             heat_map(model,char2int,int2char) 
         else:
             generate_music(model, char2int, int2char)
-            if args.generate_heat_map:
+            if args.generate_heat_map.lower()=='true':
                 heat_map(model,char2int,int2char,song_path = args.generate_file)  
 
 if __name__ == "__main__":
