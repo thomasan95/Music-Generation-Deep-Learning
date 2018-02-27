@@ -71,7 +71,8 @@ def val_to_tensor(val, dictionary, batch_size, labels=False):
     :param batch_size: int
     :param labels: whether to cast tensor into long or keep as float
     :type labels: bool
-    :return: torch.LongTensor or torch.FloatTensor
+    :return: tensor of validation and sequence length
+    :rtype: torch.LongTensor or torch.FloatTensor, int
     '''
     amount_to_pad = len(val)%batch_size
     val += [dictionary['<pad>']]*amount_to_pad

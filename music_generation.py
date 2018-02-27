@@ -74,10 +74,9 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     '''
     
     avg_val_loss = 0
-    val_seq_len = len(valid_data) - 1
-    valid_x, valid_y = [valid_data[:-1]] * args.batch_size, [valid_data[1:]] * args.batch_size
-    valid_x = utils.string_to_tensor(valid_x, char2int, args.batch_size, val_seq_len)
-    valid_y = utils.string_to_tensor(valid_y, char2int, args.batch_size, val_seq_len, labels=True)
+    valid_x, valid_y = valid_data[:-1], valid_data[1:]
+    valid_x, val_seq_len = utils.val_to_tensor(valid_x, char2int, args.batch_size)
+    valid_y, _ = utils.val_to_tensor(valid_y, char2int, args.batch_size, labels=True)
     valid_x, valid_y = Variable(valid_x), Variable(valid_y)
 
     # If GPU is available, change network to run on GPU
@@ -275,6 +274,7 @@ def main():
         inp = f.read()
         # Create tokenizing dictionary for text in ABC notation
         char2int = dict((a, b) for b, a in enumerate(list(set(inp))))
+        char2int['<pad>'] = len(char2int)
         # Create reverse lookup dictionary for the text
         int2char = {v: k for k, v in char2int.items()}
 
