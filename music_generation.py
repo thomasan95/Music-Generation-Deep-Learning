@@ -7,6 +7,8 @@ import utilities as utils
 import numpy as np
 from timeit import default_timer as timer
 import matplotlib.pyplot as plt
+import datetime
+
 
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=1, help="Specify batch size for network")
@@ -29,7 +31,8 @@ parser.add_argument("-gf", "--generate_file", type=str, default='./generate/gen.
 parser.add_argument("-gc", "--generate_length", type=int, default=5000, help="How many characters to generate")
 parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
 parser.add_argument("--save_append", type=str, default="", help="What to append to save path to make it unique")
-parser.add_argument("-rf", "--resume_file", type=str, default='./saves/checkpoint.pth.tar', help="Path to file to load")
+parser.add_argument("-rf", "--resume_file", type=str, default=('./saves/'+
+                   ('{:%b_%d_%H:%M}'.format(datetime.datetime.now()))+'_checkpoint.pth.tar'), help="Path to file to load")
 parser.add_argument("-rt", "--resume_training", type=str, default='False', help="Specify whether to continue training a saved model")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
 parser.add_argument("-ms", "--max_seq_len", type=int, default=700, help="max length of input to batch")
@@ -46,7 +49,7 @@ if gpu:
     print("\nRunning on GPU\n")
 
 
-def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int):
+def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int, losses = {'train': [], 'valid': []}, epoch=0):
     '''
     Function trains the model. It will save the current model every update_check iterations so model can then be
     loaded and resumed either for training or for music generation in the future
@@ -65,11 +68,12 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     :type optimizer: PyTorch Optimizer
     :param char2int: type dict, Dictionary to tokenize the batches
     :type char2int: dict
+    :param losses: dictionary containing the training and validation loss
+    :type losses: dict
     :return: The trained model and the corresponding losses
     :rtype: PyTorch Model, dict
     '''
-
-    losses = {'train': [], 'valid': []}
+    
     avg_val_loss = 0
     val_seq_len = len(valid_data) - 1
     valid_x, valid_y = [valid_data[:-1]] * args.batch_size, [valid_data[1:]] * args.batch_size
@@ -84,7 +88,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     times = []
     temp_loss = []
 
-    for epoch_i in range(1, args.max_epochs + 1):
+    for epoch_i in range(epoch, args.max_epochs + 1):
         loss = 0
 
         # Slowly increase seq_len during training
@@ -129,6 +133,8 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
 
             avg_val_loss = valid_loss.data[0] / val_seq_len
             losses['valid'].append(avg_val_loss)
+            losses['train'].append(sum(temp_loss)/len(temp_loss))
+            temp_loss = []
 
             utils.pickle_files('./results/losses.p', losses)
 
@@ -139,7 +145,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                                   'seq_len': seq_len,
                                   'state_dict': model.state_dict(),
                                   'optimizer': optimizer.state_dict()},
-                                 './saves/checkpoint-' + str(args.network) + '-' + str(args.save_append) + '.pth.tar')
+                                   args.resume_file)
 
             if len(losses['valid']) > 4 and args.early_stop == 'true':
                 early_stop = utils.early_stop(losses['valid'])
@@ -150,6 +156,8 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
             # Update sequence length
             if seq_len < args.max_seq_len and len(losses['valid']) > 1 and (losses['valid'][-1] < losses['valid'][-2]):
                 seq_len += int(2/(losses['valid'][-2] - losses['valid'][-1]))
+                if seq_len > args.max_seq_len:
+                    seq_len = args.max_seq_len
                 print("\nIncreasing sequence length to: " + str(seq_len))
 
         if epoch_i % 100 == 0 and epoch_i > 0:
@@ -284,8 +292,9 @@ def main():
         print("Using LSTM Network")
         model = LSTM.LSTM(args.batch_size, args.num_units, args.num_layers, num_outputs, args.dropout)
 
-    # Initialize Loss function for network
+    # Initialize Loss function for network   
     criterion = torch.nn.CrossEntropyLoss()
+ 
 
     # Initialize optimizer for network   
     if args.optim == 'Adagrad':
@@ -297,13 +306,15 @@ def main():
 
     if args.training == 'true' and args.resume_training=='True':
         print('Loading model...')
-        model = utils.resume(model, filepath=args.resume_file)
-        print('Model loaded from ' + args.resume_file)
-        _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
+        model, optimizer, epoch_i, losses, seq_len = utils.resume(model, optimizer, filepath=args.resume_file)
+        print('Resuming training with model loaded from ' + args.resume_file)
+        print('Epoch: %d\tCurrent Train Loss: %f\tCurrent Valid Loss: %f' %(epoch_i,losses['train'][-1],losses['valid'][-1]))
+        _, _ = train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int, losses=losses, epoch=(epoch_i+1))
+
     elif args.training =='true':
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
-        model = utils.resume(model, filepath=args.resume_file)
+        model, _, _, _, _ = utils.resume(model, optimizer, filepath=args.resume_file)
         generate_music(model, char2int, int2char)
 #    hmap = heat_map(model,char2int,int2char)  
 
