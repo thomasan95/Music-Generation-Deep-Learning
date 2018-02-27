@@ -177,7 +177,6 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                         if seq_len > args.max_seq_len:
                             seq_len = args.max_seq_len
                         running_mean_benchmark -= delta_rmean
-                        running_mean_benchmark = round(running_mean_benchmark, 1)
                         print("\nIncreasing sequence length to: " + str(seq_len) + " with benchmark "
                               + str(running_mean_benchmark))
 
