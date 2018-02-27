@@ -167,6 +167,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                     if seq_len > args.max_seq_len:
                         seq_len = args.max_seq_len
                     running_mean_benchmark -= delta_rmean
+                    print("\nIncreasing sequence length to: " + str(seq_len))
 
         if epoch_i % 100 == 0 and epoch_i > 0:
             times = np.asarray(times)
