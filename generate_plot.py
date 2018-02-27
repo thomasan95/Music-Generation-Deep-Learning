@@ -4,14 +4,20 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--file", type=str, default="", help="Path to pickle file of losses")
-parser.add_argument("-s", "--save_file", type=str, default="losses", help="file to save as. Will save under results")
+parser.add_argument("-s", "--save_file", type=str, default="", help="file to save as. Will save under results")
 parser.add_argument("-uc", "--update_check", type=int, default=1000, help="how many iterations per update")
 args = parser.parse_args()
 
 
-def generate_plot(file, save_file):
+def generate_plot(file, save_file=""):
     '''
     Function for visualizing training and validation loss over training cycle
+
+    File must be given for the function to run. If no save_file given, then file will be saved
+    with same name as File.
+
+    If save_file is given, the plot will be saved inside results with the given name
+
     :param file: if ran stand alone it is from args.file, path to specified file
     :type file: str
     :param save_file: if ran stand alone, it is from args.save_file, name to save the file as
@@ -47,7 +53,12 @@ def generate_plot(file, save_file):
         plt.ylabel("Loss")
         plt.title("Valid Loss over Training Cycle")
         plt.legend(loc='upper right')
-    plt.savefig('results/' + save_file + '.png')
+    if save_file == "":
+        save_file = file[:-2]
+        plt.savefig(save_file+'.png')
+    else:
+        plt.savefig('results/' + save_file + '.png')
+
     plt.show()
 
 
