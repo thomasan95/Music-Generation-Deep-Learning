@@ -46,7 +46,7 @@ def generate_plot(file, save_file):
         plt.xlabel("Every %d Training Iterations" % args.update_check)
         plt.ylabel("Loss")
         plt.title("Valid Loss over Training Cycle")
-
+        plt.legend(loc='upper right')
     plt.savefig('results/' + save_file + '.png')
     plt.show()
 
