@@ -40,6 +40,7 @@ parser.add_argument("-un", "--unit_number", type=int, default=0, help="the unit 
 parser.add_argument("-ghm", "--generate_heat_map", type=str, default='false', help="whether you wish to generate songs and then a heat map")
 parser.add_argument("-hm", "--heat_map", type=str, default='false', help="whether you wish to generate a heat map for pregenerated song")
 parser.add_argument("-hmp", "--heat_map_path", type=str, default='false', help="path of the pregenerated song you want to generate a heat map for")
+parser.add_argument("-us", "--update_seq", type=str, default='valid', help="Update sequence length based off of validation loss or train loss")
 
 args = parser.parse_args()
 
@@ -74,6 +75,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     '''
     
     avg_val_loss = 0
+    running_mean_benchmark = 3.0
     valid_x, valid_y = valid_data[:-1], valid_data[1:]
     valid_x, val_seq_len = utils.val_to_tensor(valid_x, char2int, args.batch_size)
     valid_y, _ = utils.val_to_tensor(valid_y, char2int, args.batch_size, labels=True)
@@ -152,11 +154,19 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                     break
 
             # Update sequence length
-            if seq_len < args.max_seq_len and len(losses['valid']) > 1 and (losses['valid'][-1] < losses['valid'][-2]):
-                seq_len += int(2/(losses['valid'][-2] - losses['valid'][-1]))
-                if seq_len > args.max_seq_len:
-                    seq_len = args.max_seq_len
-                print("\nIncreasing sequence length to: " + str(seq_len))
+            if args.update_seq == 'valid':
+                if seq_len < args.max_seq_len and len(losses['valid']) > 1 and (losses['valid'][-1] < losses['valid'][-2]):
+                    seq_len += int(2/(losses['valid'][-2] - losses['valid'][-1]))
+                    if seq_len > args.max_seq_len:
+                        seq_len = args.max_seq_len
+                    print("\nIncreasing sequence length to: " + str(seq_len))
+            elif args.update_seq == 'train':
+                if seq_len < args.max_seq_len and (sum(losses['train'])/len(losses['train'])) < running_mean_benchmark:
+                    delta_rmean = round(running_mean_benchmark - sum(losses['train'])/len(losses['train']), 1)
+                    seq_len = int(seq_len * 1.5**(delta_rmean*10))
+                    if seq_len > args.max_seq_len:
+                        seq_len = args.max_seq_len
+                    running_mean_benchmark -= delta_rmean
 
         if epoch_i % 100 == 0 and epoch_i > 0:
             times = np.asarray(times)
