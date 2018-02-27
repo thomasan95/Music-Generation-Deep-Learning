@@ -178,16 +178,11 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
                               + str(running_mean_benchmark))
 
         if epoch_i % 100 == 0 and epoch_i > 0:
-            times = np.asarray(times)
-
             # losses['train'].append(sum(temp_loss)/len(temp_loss))
             # temp_loss = []
-            #
-            # if losses['train'][-1] < args.threshold:
-            #     seq_len += 2
 
-            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tAvg Time Per Batch:%f" %
-                  (epoch_i, curr_loss, avg_val_loss, np.mean(times).astype(float)))
+            print("Epoch: %d\tCurrent Train Loss:%f\tValid Loss (since last check):%f\tTime Per Batch:%f" %
+                  (epoch_i, curr_loss, avg_val_loss, sum(times)))
             times = []
 
     return model, losses
