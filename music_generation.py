@@ -13,6 +13,7 @@ import datetime
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=1, help="Specify batch size for network")
 parser.add_argument("-sl", "--seq_len", type=int, default=5, help="Initial sequence length to train on")
+parser.add_argument("-seq", "--sequential", type=str, default='false', help="Specify whether to train on data sequentially")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
 parser.add_argument("-e", "--max_epochs", type=int, default=1000000, help="Specify number of epochs to train network")
 parser.add_argument("-thresh", "--threshold", type=float, default=2.5, help="Threshold for when to increase batch_size")
@@ -107,7 +108,10 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
         #         print("\nIncreasing sequence length to: " + str(seq_len))
 
         # Tokenize the strings and convert to tensors then variables to feed into network
-        batch_x, batch_y = utils.random_data_sample(train_data, seq_len, args.batch_size)
+        if args.sequential.lower() == 'true':
+            batch_x, batch_y = utils.random_data_sample(train_data, seq_len, args.batch_size)
+        else:
+            batch_x, batch_y = utils.random_data_sample(train_data, seq_len, args.batch_size)
         batch_x = utils.string_to_tensor(batch_x, char2int, args.batch_size, seq_len)
         batch_y = utils.string_to_tensor(batch_y, char2int, args.batch_size, seq_len, labels=True)
         batch_x, batch_y = Variable(batch_x), Variable(batch_y)

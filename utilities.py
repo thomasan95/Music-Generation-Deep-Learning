@@ -29,6 +29,26 @@ def valid_to_batch(valid, batch_size):
     amount_to_pad = len(valid) % batch_size
 
 
+def sequential_data_sample(data, seq_len, batch_size, start_idx):
+    assert isinstance(batch_size, int)
+    assert isinstance(data, list)
+    assert isinstance(start_idx, int)
+    assert seq_len > 0
+    assert batch_size > 0
+    assert start_idx >= 0
+
+    n = len(data)
+
+    x, y = [], []
+    for b in range(batch_size):
+        if (start_idx+seq_len+1) >= n:
+            start_idx = seq_len-(n-start_idx)
+
+        x.append(data[start_idx:start_idx + seq_len])
+        y.append(data[start_idx + 1:start_idx + seq_len + 1])
+        start_idx = start_idx+seq_len
+
+    return start_idx, x, y
 
 def random_data_sample(data, seq_len, batch_size):
     ''' Grabs a random chunk of data from the training set.
