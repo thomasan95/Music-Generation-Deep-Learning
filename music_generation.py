@@ -278,21 +278,21 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
         body_filter[:song_length/8] = -6
 
         for unit in range(num_units):
-        activations = []
-                for index in range(song_length):
-            output = model(tensor_song[index])
-                    hidden, cell = model.hidden
-                    hidden = hidden.data.numpy()
-            activations.append(hidden[0,0,unit])
-        activations = np.asarray(activations)
-        correlation = np.dot(activations,header_filter)
-        if correlation > header_correlation:
-            header_correlation = correlation
-            header = (activations,unit)
-        correlation = np.dot(activations,body_filter)
-        if correlation > body_correlation:
-            body_correlation = correlation
-            body = (activations,unit)
+            activations = []
+            for index in range(song_length):
+                output = model(tensor_song[index])
+                hidden, cell = model.hidden
+                hidden = hidden.data.numpy()
+                activations.append(hidden[0,0,unit])
+            activations = np.asarray(activations)
+            correlation = np.dot(activations,header_filter)
+            if correlation > header_correlation:
+                header_correlation = correlation
+                header = (activations,unit)
+            correlation = np.dot(activations,body_filter)
+            if correlation > body_correlation:
+                body_correlation = correlation
+                body = (activations,unit)
         activations = header[0]
         print("Header Detector for song "+str(index)+" is Unit: "+str(header[1]))
         print("Body Detector for song "+str(index)+" is Unit: " +str(body[1]))
@@ -301,11 +301,11 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
         for index in range(song_length):
         #model.zero_grad()
             output = model(tensor_song[index])
-        hidden, cell = model.hidden
-        cell = cell.data.numpy()
-        hidden = hidden.data.numpy()
-            # print cell[0,0,0]
-        activations.append(hidden[0, 0, unit_num])
+            hidden, cell = model.hidden
+            cell = cell.data.numpy()
+            hidden = hidden.data.numpy()
+                # print cell[0,0,0]
+            activations.append(hidden[0, 0, unit_num])
         activations = np.asarray(activations)
 
         
@@ -324,16 +324,16 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
         countH = height-1
         countW = 0
         for index in range(len(generated_song)):
-        char = generated_song[index]
-        if char == '\n':
-        char = 'nl'
-        elif char == ' ':
-        char = 'sp'
-            plt.text(countW, countH, char)
-            countW += 1
-            if countW >= width:
-                countH -= 1
-                countW = 0
+            char = generated_song[index]
+            if char == '\n':
+                char = 'nl'
+            elif char == ' ':
+                char = 'sp'
+                plt.text(countW, countH, char)
+                countW += 1
+                if countW >= width:
+                    countH -= 1
+                    countW = 0
     
         plt.colorbar(heatmap)
         plt.show()
