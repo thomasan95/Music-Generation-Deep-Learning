@@ -248,7 +248,7 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
         f.close()
 
 
-def heat_map(model, char2int, int2char, unit_num=0, song_path=args.heat_map_path, file_path='saves/heat_map'):
+def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=args.heat_map_path, file_path='saves/heat_map'):
     generated_songs = utils.song_parser(song_path)
     num_songs = len(generated_songs)
     
