@@ -324,7 +324,12 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
         countH = height-1
         countW = 0
         for index in range(len(generated_song)):
-            plt.text(countW, countH, generated_song[index])
+	    char = generated_song[index]
+	    if char == '\n':
+		char = 'nl'
+	    elif char == ' ':
+		char = 'sp'
+            plt.text(countW, countH, char)
             countW += 1
             if countW >= width:
                 countH -= 1
