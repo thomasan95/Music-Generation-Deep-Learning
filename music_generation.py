@@ -43,6 +43,7 @@ parser.add_argument("-hm", "--heat_map", action='store_true', default=False, hel
 parser.add_argument("-hmp", "--heat_map_path", type=str, default='saves/song.txt', help="path of the pregenerated song you want to view a heat map for")
 parser.add_argument("-us", "--update_seq", type=str, default='valid', help="Update sequence length based off of validation loss or train loss")
 parser.add_argument('--use_gpu_f', action='store_false', default=True, help='Flag to NOT gpu (STORE_FALSE)(default: True)')
+parser.add_argument('--find_special', action='store_true', default=False, help='whether you want heat map to return header and body finders (STORE_FALSE)(default: False)')
 
 args = parser.parse_args()
 
@@ -248,32 +249,67 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
         f.close()
 
 
-def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=args.heat_map_path, file_path='saves/heat_map'):
+def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=args.heat_map_path, file_path='saves/heat_map',find_special = args.find_special):
     generated_songs = utils.song_parser(song_path)
     num_songs = len(generated_songs)
     
     for song_ind in range(num_songs):
 
         generated_song = generated_songs[song_ind]
-	
-        tensor_song = utils.string_to_tensor([list(generated_song)], char2int , 1, len(generated_song) )
+	song_length = len(generated_song)
+
+        tensor_song = utils.string_to_tensor([list(generated_song)], char2int , 1, song_length)
 	
         tensor_song = Variable(tensor_song)
         if gpu:
             tensor_song = tensor_song.cuda()
-        activations = []
-        for index in range(len(generated_song)):
-            model.zero_grad()
-            output = model(tensor_song[index])
+        
+	if find_special:
+	    output = model(tensor_song[0])
             hidden, cell = model.hidden
-            cell = cell.data.numpy()
             hidden = hidden.data.numpy()
-            # print cell[0,0,0]
-            activations.append(hidden[0, 0, unit_num])
-        activations = np.asarray(activations)
+	    num_units = np.shape(hidden)[2]
+	    header_correlation = -99999999
+	    body_correlation =-999999999
+	    header_filter = np.ones(song_length)
+	    header_filter[song_length/8:]=-1
+	    header_filter[:song_length/8]= 6
+	    body_filter = np.ones(song_length)
+	    body_filter[:song_length/8] = -6
+	    
+	    for unit in range(num_units):
+		activations = []
+                for index in range(song_length):
+		    output = model(tensor_song[index])
+            	    hidden, cell = model.hidden
+                    hidden = hidden.data.numpy()
+		    activations.append(hidden[0,0,unit])
+		activations = np.asarray(activations)
+		correlation = np.dot(activations,header_filter)
+		if correlation > header_correlation:
+			header_correlation = correlation
+			header = (activations,unit)
+		correlation = np.dot(activations,body_filter)
+		if correlation > body_correlation:
+			body_correlation = correlation
+			body = (activations,unit)
+	    activations = header[0]
+	    print("Header Detector for song "+str(index)+" is Unit: "+str(header[1]))
+	    print("Body Detector for song "+str(index)+" is Unit: " +str(body[1]))
+	else:
+	    activations = []
+	    for index in range(song_length):
+		#model.zero_grad()
+	    	output = model(tensor_song[index])
+		hidden, cell = model.hidden
+		cell = cell.data.numpy()
+		hidden = hidden.data.numpy()
+		    # print cell[0,0,0]
+		activations.append(hidden[0, 0, unit_num])
+	    activations = np.asarray(activations)
 	
-        song_length = len(generated_song)
-        print(song_length)
+        
+        print("Song Length: "+str(song_length))
         height = int(np.sqrt(song_length)) + 1
         width = int(song_length/height) + 1
         print("height %d"% height)
