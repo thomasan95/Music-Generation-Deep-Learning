@@ -255,12 +255,14 @@ def heat_map(model, char2int, int2char, unit_num=0, song_path=args.heat_map_path
     for song_ind in range(num_songs):
 
         generated_song = generated_songs[song_ind]
-        tensor_song = utils.string_to_tensor(list(generated_song), char2int , 1, 1)
+	
+        tensor_song = utils.string_to_tensor([list(generated_song)], char2int , 1, len(generated_song) )
+	
         tensor_song = Variable(tensor_song)
         if gpu:
             tensor_song = tensor_song.cuda()
         activations = []
-        for index in range(len(tensor_song)):
+        for index in range(len(generated_song)):
             model.zero_grad()
             output = model(tensor_song[index])
             hidden, cell = model.hidden
@@ -269,6 +271,7 @@ def heat_map(model, char2int, int2char, unit_num=0, song_path=args.heat_map_path
             # print cell[0,0,0]
             activations.append(hidden[0, 0, unit_num])
         activations = np.asarray(activations)
+	
         song_length = len(generated_song)
         print(song_length)
         height = int(np.sqrt(song_length)) + 1
