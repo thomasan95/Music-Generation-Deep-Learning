@@ -309,35 +309,35 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
         activations = np.asarray(activations)
 
         
-        print("Song Length: "+str(song_length))
-        height = int(np.sqrt(song_length)) + 1
-        width = int(song_length/height) + 1
-        print("height %d"% height)
-        print("width %d"% width)
-        song_activations = np.zeros(height * width)
-        song_activations[:song_length] = activations[:]
-        song_activations = np.reshape(song_activations, (height, width))
-        song_activations = [x for x in song_activations[::-1]]
-        fig = plt.figure()
-        heatmap = plt.pcolormesh(song_activations,cmap = 'coolwarm')
-    
-        countH = height-1
-        countW = 0
-        for index in range(len(generated_song)):
-            char = generated_song[index]
-            if char == '\n':
-                char = 'nl'
-            elif char == ' ':
-                char = 'sp'
-                plt.text(countW, countH, char)
-                countW += 1
-                if countW >= width:
-                    countH -= 1
-                    countW = 0
-    
-        plt.colorbar(heatmap)
-        plt.show()
-        fig.savefig(file_path+str(song_ind)+'.png')
+    print("Song Length: "+str(song_length))
+    height = int(np.sqrt(song_length)) + 1
+    width = int(song_length/height) + 1
+    print("height %d"% height)
+    print("width %d"% width)
+    song_activations = np.zeros(height * width)
+    song_activations[:song_length] = activations[:]
+    song_activations = np.reshape(song_activations, (height, width))
+    song_activations = [x for x in song_activations[::-1]]
+    fig = plt.figure()
+    heatmap = plt.pcolormesh(song_activations,cmap = 'coolwarm')
+
+    countH = height-1
+    countW = 0
+    for index in range(len(generated_song)):
+        char = generated_song[index]
+        if char == '\n':
+            char = 'nl'
+        elif char == ' ':
+            char = 'sp'
+            plt.text(countW, countH, char)
+            countW += 1
+            if countW >= width:
+                countH -= 1
+                countW = 0
+
+    plt.colorbar(heatmap)
+    plt.show()
+    fig.savefig(file_path+str(song_ind)+'.png')
 
 
 def main():
