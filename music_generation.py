@@ -296,8 +296,8 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
                     body_correlation = correlation
                     body = (activations,unit)
             activations = header[0]
-            print("Header Detector for song "+str(index)+" is Unit: "+str(header[1]))
-            print("Body Detector for song "+str(index)+" is Unit: " +str(body[1]))
+            print("Header Detector for song "+str(song_ind)+" is Unit: "+str(header[1]))
+            print("Body Detector for song "+str(song_ind)+" is Unit: " +str(body[1]))
         else:
             activations = []
             for index in range(song_length):
@@ -331,11 +331,11 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
                 char = 'nl'
             elif char == ' ':
                 char = 'sp'
-                plt.text(countW, countH, char)
-                countW += 1
-                if countW >= width:
-                    countH -= 1
-                    countW = 0
+            plt.text(countW, countH, char)
+            countW += 1
+            if countW >= width:
+                countH -= 1
+                countW = 0
 
         plt.colorbar(heatmap)
         plt.show()
