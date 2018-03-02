@@ -160,20 +160,27 @@ def checkpoint(state, file_name='./saves/checkpoint.pth.tar'):
     torch.save(state, file_name)
 
 
-def resume(model, optimizer, filepath='./saves/checkpoint.pth.tar'):
+def resume(model, optimizer, gpu, filepath='./saves/checkpoint.pth.tar'):
     '''
     Loads the the saved PyTorch model at the specified location
 
     :param model: Initialized model
     :type model: PyTorch model
+    :param optimizer: Optimizer to resume state dict
+    :type optimizer: torch.optim
     :param filepath: location of where model is saved
+    :param gpu: boolean for whether to load as gpu model or cpu model
+    :type gpu: bool
     :type filepath: str
     :return: saved PyTorch model
     :rtype: PyTorch model
     '''
     assert isinstance(filepath, str)
 
-    f = torch.load(filepath)
+    if gpu:
+        f = torch.load(filepath)
+    else:
+        f = torch.load(filepath, map_location=lambda storage, loc: storage)
     epoch = f['epoch']
     losses = f['losses']
     seq_len = f['seq_len']

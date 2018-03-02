@@ -375,7 +375,7 @@ def main():
 
     if args.training.lower() == 'true' and args.resume_training.lower() == 'true':
         print('Loading model...')
-        model, optimizer, epoch_i, losses, seq_len = utils.resume(model, optimizer, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
+        model, optimizer, epoch_i, losses, seq_len = utils.resume(model, optimizer, gpu, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
         print('Resuming training with model loaded from ' + './saves/checkpoint-' + str(args.save_append) + '.pth.tar')
         print('Epoch: %d\tCurrent Train Loss: %f\tCurrent Valid Loss: %f' %(epoch_i,losses['train'][-1],losses['valid'][-1]))
         _, _ = train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int, losses=losses, epoch=(epoch_i+1))
@@ -383,7 +383,7 @@ def main():
     elif args.training.lower() == 'true':
         _, _ = train(model, train_data, valid_data, args.seq_len, criterion, optimizer, char2int)
     else:
-        model, _, _, _, _ = utils.resume(model, optimizer, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
+        model, _, _, _, _ = utils.resume(model, optimizer, gpu, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
         if args.heat_map:
             heat_map(model,char2int,int2char) 
         else:
