@@ -167,7 +167,7 @@ def resume(model, optimizer, gpu, filepath='./saves/checkpoint.pth.tar'):
     :param model: Initialized model
     :type model: PyTorch model
     :param optimizer: Optimizer to resume state dict
-    :type optimizer: torch.optim
+    :type optimizer: torch.optim.adam.Adam, torch.optim.rmsprop.RMSprop, torch.optim.adagrad.Adagrad
     :param filepath: location of where model is saved
     :param gpu: boolean for whether to load as gpu model or cpu model
     :type gpu: bool
