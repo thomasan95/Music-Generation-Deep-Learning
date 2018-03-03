@@ -11,7 +11,7 @@ args = parser.parse_args()
 
 
 def generate_plot(file, save_file="", title=""):
-    '''
+    """
     Function for visualizing training and validation loss over training cycle
 
     File must be given for the function to run. If no save_file given, then file will be saved
@@ -26,7 +26,7 @@ def generate_plot(file, save_file="", title=""):
     :param title: title of the plot to generate
     :type title: str
     :return: None
-    '''
+    """
 
     assert isinstance(file, str)
     assert isinstance(save_file, str)

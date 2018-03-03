@@ -64,7 +64,7 @@ if gpu:
 
 def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int,
           losses = {'train': [], 'valid': []}, epoch=0):
-    '''
+    """
     Function trains the model. It will save the current model every update_check iterations so model can then be
     loaded and resumed either for training or for music generation in the future
 
@@ -88,7 +88,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
     :type epoch: int
     :return: The trained model and the corresponding losses
     :rtype: PyTorch Model, dict
-    '''
+    """
 
     avg_val_loss = 0
     running_mean_benchmark = 3.0
@@ -162,8 +162,8 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
 
             if losses['valid'][-1] <= min(losses['valid']):
                 print("New Best Model! Saving!")
-                utils.checkpoint({'epoch': epoch_i, 
-                                  'losses': losses, 
+                utils.checkpoint({'epoch': epoch_i,
+                                  'losses': losses,
                                   'seq_len': seq_len,
                                   'state_dict': model.state_dict(),
                                   'optimizer': optimizer.state_dict()},
@@ -206,7 +206,7 @@ def train(model, train_data, valid_data, seq_len, criterion, optimizer, char2int
 
 
 def generate_music(model, char2int, int2char, file=args.generate_file, num_samples=1):
-    '''
+    """
     Generate music will be called when args.training is set to 'false'. In that case, the function will generate
     a certain amount of characters specified by args.generate_length.
 
@@ -220,7 +220,7 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
     :type file: str
     :param num_samples:  Number of samples to draw
     :type num_samples: int
-    '''
+    """
     if gpu:
         model = model.cuda()
 
@@ -258,10 +258,26 @@ def generate_music(model, char2int, int2char, file=args.generate_file, num_sampl
         f.close()
 
 
-def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=args.heat_map_path, file_path='saves/heat_map',find_special = args.find_special):
+def heat_map(model, char2int, unit_num=args.unit_number, song_path=args.heat_map_path, file_path='saves/heat_map',
+             find_special=args.find_special):
+    """
+    Generate the heat map and show activation functions for the LSTM/GRU hidden cells
+    :param model: model to pass in (pytorch model)
+    :param char2int: dictionary to tokenize characters
+    :type char2int: dict
+    :param unit_num: which unit to display
+    :type unit_num: int
+    :param song_path: path to song file
+    :type song_path: str
+    :param file_path: path to where to save the heat map
+    :type file_path: str
+    :param find_special: Boolean to indicate whether to return body and header finders
+    :type find_special: bool
+    :return: None
+    """
     generated_songs = utils.song_parser(song_path)
     num_songs = len(generated_songs)
-    
+
     for song_ind in range(num_songs):
 
         generated_song = generated_songs[song_ind]
@@ -273,7 +289,7 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
 
         if gpu:
             tensor_song = tensor_song.cuda()
-        
+
         if find_special:
 
             output = model(tensor_song[0])
@@ -319,7 +335,7 @@ def heat_map(model, char2int, int2char, unit_num=args.unit_number, song_path=arg
                 activations.append(hidden[0, 0, unit_num])
             activations = np.asarray(activations)
 
-        
+
         print("Song Length: "+str(song_length))
         height = int(np.sqrt(song_length)) + 1
         width = int(song_length/height) + 1
@@ -373,10 +389,10 @@ def main():
         print("Using LSTM Network")
         model = LSTM.LSTM(args.batch_size, args.num_units, args.num_layers, num_outputs, args.dropout)
 
-    # Initialize Loss function for network   
+    # Initialize Loss function for network
     criterion = torch.nn.CrossEntropyLoss()
 
-    # Initialize optimizer for network   
+    # Initialize optimizer for network
     if args.optim.lower() == 'adagrad':
         optimizer = optim.Adagrad(model.parameters(), lr=args.learning_rate)
     elif args.optim.lower() == "rms":
@@ -396,12 +412,13 @@ def main():
     else:
         model, _, _, _, _ = utils.resume(model, optimizer, gpu, filepath=('./saves/checkpoint-' + str(args.save_append) + '.pth.tar'))
         if args.heat_map:
-            heat_map(model,char2int,int2char) 
+            heat_map(model,char2int,int2char)
         else:
             generate_music(model, char2int, int2char)
             if args.generate_heat_map:
                 print('in if statement')
-                heat_map(model,char2int,int2char,song_path = args.generate_file)  
+                heat_map(model,char2int,int2char,song_path = args.generate_file)
+
 
 if __name__ == "__main__":
     main()

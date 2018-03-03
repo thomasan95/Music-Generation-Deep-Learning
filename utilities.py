@@ -4,16 +4,16 @@ import pickle
 
 
 def grab_data(split_pct, music_data):
-    '''
-     Utility function to read in the data
+    """
+    Utility function to read in the data
 
-    :param split_pct: amount of data to split into validation and test
-    :type split_pct: float
-    :param music_data: The music file in ABC format in one continuous string
-    :type music_data: str
-    :return: training and validation sets
-    :rtype: list, list
-    '''
+   :param split_pct: amount of data to split into validation and test
+   :type split_pct: float
+   :param music_data: The music file in ABC format in one continuous string
+   :type music_data: str
+   :return: training and validation sets
+   :rtype: list, list
+   """
 
     assert 0 <= split_pct <= 1.0
     assert isinstance(split_pct, float)
@@ -27,6 +27,19 @@ def grab_data(split_pct, music_data):
 
 
 def sequential_data_sample(data, seq_len, batch_size, start_idx):
+    """
+    Option to sample data sequentially versus random splicing
+    :param data: list of characters to sample from
+    :type data: list
+    :param seq_len: how long each sequence is
+    :type seq_len: int
+    :param batch_size: how many samples to grab
+    :type batch_size: int
+    :param start_idx: Where to start sampling from
+    :type start_idx: int
+    :return: start_index, x, y
+    :rtype: int, list, list
+    """
     assert isinstance(batch_size, int)
     assert isinstance(data, list)
     assert isinstance(start_idx, int)
@@ -49,7 +62,8 @@ def sequential_data_sample(data, seq_len, batch_size, start_idx):
 
 
 def random_data_sample(data, seq_len, batch_size):
-    ''' Grabs a random chunk of data from the training set.
+    """
+    Grabs a random chunk of data from the training set.
     It will shift the target by one from the input values, so the network will be
     able to train character by character
 
@@ -61,7 +75,7 @@ def random_data_sample(data, seq_len, batch_size):
     :type batch_size: int
     :return: an input and target values returned for network
     :rtype: str, str
-    '''
+    """
 
     assert isinstance(batch_size, int)
     assert isinstance(data, list)
@@ -79,7 +93,7 @@ def random_data_sample(data, seq_len, batch_size):
 
 
 def val_to_tensor(val, dictionary, batch_size, labels=False):
-    '''
+    """
     Performs padding on validation set and then reshapes into appropriate tensors
     :param val: validation set
     :type val: list
@@ -91,7 +105,8 @@ def val_to_tensor(val, dictionary, batch_size, labels=False):
     :type labels: bool
     :return: tensor of validation and sequence length
     :rtype: torch.LongTensor or torch.FloatTensor, int
-    '''
+    """
+
     amount_to_pad = len(val)%batch_size
     val += ['<pad>']*amount_to_pad
     val_seq_len = len(val)//batch_size
@@ -108,7 +123,8 @@ def val_to_tensor(val, dictionary, batch_size, labels=False):
 
 
 def string_to_tensor(inp, dictionary, batch_size, seq_len, labels=False):
-    '''
+
+    """
     Changes the string into tokenized tensor string
 
     :param inp: batch string that we would convert to tensor
@@ -123,8 +139,7 @@ def string_to_tensor(inp, dictionary, batch_size, seq_len, labels=False):
     :type labels: bool
     :return: tensor of tokenized string
     :rtype: torch.FloatTensor, torch.LongTensor
-    '''
-
+    """
     assert isinstance(inp, list)
     assert isinstance(dictionary, dict)
     assert isinstance(batch_size, int)
@@ -143,14 +158,14 @@ def string_to_tensor(inp, dictionary, batch_size, seq_len, labels=False):
 
 
 def checkpoint(state, file_name='./saves/checkpoint.pth.tar'):
-    '''
+    """
     Save the PyTorch model
 
     :param state: Contains everything to be stored
     :type state: dict
     :param file_name: path where to save the file
     :type file_name: str
-    '''
+    """
 
     assert isinstance(state, dict)
     assert isinstance(file_name, str)
@@ -159,7 +174,7 @@ def checkpoint(state, file_name='./saves/checkpoint.pth.tar'):
 
 
 def resume(model, optimizer, gpu, filepath='./saves/checkpoint.pth.tar'):
-    '''
+    """
     Loads the the saved PyTorch model at the specified location
 
     :param model: Initialized model
@@ -172,7 +187,7 @@ def resume(model, optimizer, gpu, filepath='./saves/checkpoint.pth.tar'):
     :type filepath: str
     :return: saved PyTorch model
     :rtype: PyTorch model
-    '''
+    """
     assert isinstance(filepath, str)
 
     if gpu:
@@ -189,14 +204,14 @@ def resume(model, optimizer, gpu, filepath='./saves/checkpoint.pth.tar'):
 
 
 def early_stop(val_loss):
-    '''
+    """
     Implement Early Stopping in the function
 
     :param val_loss: List of validation losses
     :type val_loss: list
     :return: bool of whether to early stop or not
     :rtype: bool
-    '''
+    """
 
     assert isinstance(val_loss, list)
 
@@ -207,54 +222,54 @@ def early_stop(val_loss):
 
 
 def pickle_files(filename, stuff):
-    '''
+    """
     Save files to be loaded in the future
     :param filename: name of file to save
     :type filename: str
     :param stuff: Datastructure to be saved
     :return: None
-    '''
+    """
     save_stuff = open(filename, "wb")
     pickle.dump(stuff, save_stuff)
     save_stuff.close()
 
 
 def load_files(filename):
-    '''
+    """
     Load files from pickle
     :param filename: name of pickle to load
     :type filename: str
     :return: None
-    '''
-    saved_stuff = open(filename,"rb")
+    """
+    saved_stuff = open(filename, "rb")
     stuff = pickle.load(saved_stuff)
     saved_stuff.close()
     return stuff
 
 
 def song_parser(file_path):
-    '''
+    """
     loads file of generated songs and splits up by <start> <end> terminators returns as list of strings
     :param file_path: specifies file to open
     :type file_path: str
     :return: list of strings where each string is a song
     :rtype: list(str)
-    '''
+    """
 
-    music_file = open(file_path,'r')
+    music_file = open(file_path, 'r')
     all_songs = music_file.read()
     list_songs = []
     loc = 0
     found = 0
-    while(found != -1):
-        loc = all_songs.find('<start>',loc)
-        found = all_songs.find('<start>',loc+1)
+    while found != -1:
+        loc = all_songs.find('<start>', loc)
+        found = all_songs.find('<start>', loc+1)
         if found == -1:
-            found = all_songs.find('<end>',loc+1)
+            found = all_songs.find('<end>', loc+1)
             if found != -1:
                 list_songs.append(all_songs[loc:found+len('<end>')])
                 return list_songs
-            else: 
+            else:
                 return list_songs
         else:
             list_songs.append(all_songs[loc:found+len('<end>')])
