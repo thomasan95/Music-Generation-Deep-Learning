@@ -13,7 +13,8 @@ import datetime
 parser = argparse.ArgumentParser(description="Specify parameters for network")
 parser.add_argument("-bz", "--batch_size", type=int, default=1, help="Specify batch size for network")
 parser.add_argument("-sl", "--seq_len", type=int, default=5, help="Initial sequence length to train on")
-parser.add_argument("-seq", "--sequential", type=str, default='false', help="Specify whether to train on data sequentially")
+parser.add_argument("-seq", "--sequential", type=str, default='false',
+                    help="Specify whether to train on data sequentially")
 parser.add_argument("-nu", "--num_units", type=int, default=100, help="Specify hidden units for network")
 parser.add_argument("-e", "--max_epochs", type=int, default=1000000, help="Specify number of epochs to train network")
 parser.add_argument("-thresh", "--threshold", type=float, default=2.5, help="Threshold for when to increase batch_size")
@@ -33,17 +34,25 @@ parser.add_argument("-gc", "--generate_length", type=int, default=5000, help="Ho
 parser.add_argument("-temp", "--temperature", type=float, default=0.8, help="Temperature for network")
 parser.add_argument("--save_append", type=str, default=('{:%b_%d_%H:%M}'.format(datetime.datetime.now())), 
                     help="What to append to save path to make it unique")
-parser.add_argument("-rt", "--resume_training", type=str, default='False', help="Specify whether to continue training a saved model")
+parser.add_argument("-rt", "--resume_training", type=str, default='False',
+                    help="Specify whether to continue training a saved model")
 parser.add_argument("-es", "--early_stop", type=str, default='true', help="Specify whether to use early stopping")
 parser.add_argument("-ms", "--max_seq_len", type=int, default=600, help="max length of input to batch")
 parser.add_argument("-op", "--optim", type=str, default='Adam', help="Specify type of optimizer for network")
-parser.add_argument("-un", "--unit_number", type=int, default=0, help="the unit number that you wish to generate a heat map for")
-parser.add_argument("-ghm", "--generate_heat_map", action='store_true', default=False, help="whether you wish to generate songs and then a heat map")
-parser.add_argument("-hm", "--heat_map", action='store_true', default=False, help="whether you wish to generate a heat map for pregenerated song")
-parser.add_argument("-hmp", "--heat_map_path", type=str, default='saves/song.txt', help="path of the pregenerated song you want to view a heat map for")
-parser.add_argument("-us", "--update_seq", type=str, default='valid', help="Update sequence length based off of validation loss or train loss")
-parser.add_argument('--use_gpu_f', action='store_false', default=True, help='Flag to NOT gpu (STORE_FALSE)(default: True)')
-parser.add_argument('--find_special', action='store_true', default=False, help='whether you want heat map to return header and body finders (STORE_FALSE)(default: False)')
+parser.add_argument("-un", "--unit_number", type=int, default=0,
+                    help="the unit number that you wish to generate a heat map for")
+parser.add_argument("-ghm", "--generate_heat_map", action='store_true', default=False,
+                    help="whether you wish to generate songs and then a heat map")
+parser.add_argument("-hm", "--heat_map", action='store_true', default=False,
+                    help="whether you wish to generate a heat map for pregenerated song")
+parser.add_argument("-hmp", "--heat_map_path", type=str, default='saves/song.txt',
+                    help="path of the pregenerated song you want to view a heat map for")
+parser.add_argument("-us", "--update_seq", type=str, default='valid',
+                    help="Update sequence length based off of validation loss or train loss")
+parser.add_argument('--use_gpu_f', action='store_false', default=True,
+                    help='Flag to NOT gpu (STORE_FALSE)(default: True)')
+parser.add_argument('--find_special', action='store_true', default=False,
+                    help='whether you want heat map to return header and body finders (STORE_FALSE)(default: False)')
 
 args = parser.parse_args()
 
