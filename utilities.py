@@ -47,6 +47,7 @@ def sequential_data_sample(data, seq_len, batch_size, start_idx):
 
     return start_idx, x, y
 
+
 def random_data_sample(data, seq_len, batch_size):
     ''' Grabs a random chunk of data from the training set.
     It will shift the target by one from the input values, so the network will be
@@ -233,10 +234,13 @@ def load_files(filename):
 
 def song_parser(file_path):
     '''
-    loads file of generated songs 
-    and splits up by <start> <end> terminators
-    returns as list of strings
+    loads file of generated songs and splits up by <start> <end> terminators returns as list of strings
+    :param file_path: specifies file to open
+    :type file_path: str
+    :return: list of strings where each string is a song
+    :rtype: list(str)
     '''
+
     music_file = open(file_path,'r')
     all_songs = music_file.read()
     list_songs = []
