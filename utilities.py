@@ -25,9 +25,6 @@ def grab_data(split_pct, music_data):
     split_idx = len(music_data) - len(splits[-1]) - len('<start>')
     return list(music_data[:split_idx]), list(music_data[split_idx:])
 
-def valid_to_batch(valid, batch_size):
-    amount_to_pad = len(valid) % batch_size
-
 
 def sequential_data_sample(data, seq_len, batch_size, start_idx):
     assert isinstance(batch_size, int)
